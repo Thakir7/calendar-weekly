@@ -619,7 +619,11 @@
 
   onAuthStateChanged(auth, (user)=>{
     state.user = user;
-    state.isAdmin = !!user && ADMIN_EMAILS.includes(user.email);
+    const email = (user?.email || "").trim().toLowerCase();
+state.isAdmin =
+  !!user &&
+  ADMIN_EMAILS.map(e => (e || "").trim().toLowerCase()).includes(email);
+
 
     // restart listeners
     if(unsubPublic) unsubPublic();
@@ -763,3 +767,4 @@
 </script>
 </body>
 </html>
+
