@@ -4,18 +4,23 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>التقويم الدراسي الأسبوعي (Firebase)</title>
+
   <style>
     :root{
-      --bg:#0b1020; --text:#e8eeff; --muted:#a9b6e6;
+      --bg:#0b1020;
+      --card:#111a33;
+      --text:#e8eeff;
+      --muted:#a9b6e6;
       --line:rgba(255,255,255,.10);
       --friSat:rgba(255, 209, 102, .18);
       --accent:#7c5cff;
       --ok:#2fe7a4;
+      --danger:#ff5c7a;
     }
     *{box-sizing:border-box}
     body{
       margin:0;
-      font-family:Tahoma,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      font-family: Tahoma, system-ui, -apple-system, Segoe UI, Roboto, Arial;
       background:
         radial-gradient(1200px 800px at 20% 0%, #1b2a6b 0%, transparent 55%),
         radial-gradient(900px 700px at 100% 30%, #4a1f6b 0%, transparent 55%),
@@ -23,10 +28,13 @@
       color:var(--text);
     }
     .wrap{max-width:1250px;margin:0 auto;padding:18px}
+
     .topbar{
       display:flex;gap:12px;align-items:center;justify-content:space-between;
       background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
-      border:1px solid var(--line);border-radius:16px;padding:14px 16px;
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px 16px;
       backdrop-filter: blur(10px);
     }
     .brand{display:flex;gap:12px;align-items:center}
@@ -43,8 +51,9 @@
       background:rgba(255,255,255,.06);
       color:var(--text);
       padding:10px 12px;border-radius:12px;
-      cursor:pointer;font-weight:800;
+      cursor:pointer;
       transition:.15s transform, .15s background;
+      font-weight:800;
     }
     button:hover{transform:translateY(-1px);background:rgba(255,255,255,.09)}
     button.primary{background:rgba(124,92,255,.25)}
@@ -64,11 +73,13 @@
       border-radius:14px;background:rgba(255,255,255,.04);
     }
 
+    /* ===== Calendar ===== */
     .grid{margin-top:14px;display:grid;grid-template-columns:1fr;gap:14px}
     .weekCard{
       border:1px solid var(--line);
       background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      border-radius:18px;overflow:hidden;
+      border-radius:18px;
+      overflow:hidden;
     }
     .weekHead{
       display:flex;justify-content:space-between;align-items:center;gap:10px;
@@ -78,11 +89,8 @@
     .weekTitle strong{font-size:14px}
     .weekTitle span{font-size:12px;color:var(--muted)}
     .table{display:grid;grid-template-columns:repeat(7,1fr);border-top:1px solid var(--line)}
-    .th,.td{
-      padding:10px;border-left:1px solid var(--line);
-      border-bottom:1px solid var(--line);min-height:98px;position:relative
-    }
-    .th{min-height:auto;font-weight:900;background:rgba(255,255,255,.04);text-align:center}
+    .th,.td{padding:10px;border-left:1px solid var(--line);border-bottom:1px solid var(--line);min-height:98px;position:relative}
+    .th{min-height:auto;font-weight:900;background:rgba(255,255,255,.04);text-align:center;padding:10px 6px}
     .th.friSat,.td.friSat{background:var(--friSat)}
     .th:last-child,.td:last-child{border-left:none}
     .gDate{font-size:12px;color:var(--muted)}
@@ -99,27 +107,50 @@
     }
     .event .tag{width:10px;height:10px;border-radius:3px;flex:0 0 auto;background:var(--accent);margin-top:3px}
     .event .txt{flex:1 1 auto}
-    .event .x{color:rgba(255,255,255,.7);cursor:pointer;font-weight:900;padding:0 6px;border-radius:8px}
+    .event .x{color:rgba(255,255,255,.7);cursor:pointer;font-weight:900;padding:0 6px;border-radius:8px;line-height:18px}
     .event .x:hover{background:rgba(255,255,255,.08)}
     .badgeScope{
       font-size:10px;padding:3px 7px;border-radius:999px;border:1px solid rgba(255,255,255,.18);
       color:rgba(255,255,255,.9);background:rgba(0,0,0,.18);font-weight:900
     }
 
+    /* ===== Modal (Improved Admin UX) ===== */
     .modalBack{
       position:fixed;inset:0;background:rgba(0,0,0,.55);
       display:none;align-items:center;justify-content:center;padding:16px;z-index:50;
     }
     .modal{
-      width:min(980px, 100%);
+      width:min(1020px, 100%);
+      max-height: calc(100vh - 24px);
       border:1px solid var(--line);
       background:linear-gradient(180deg, rgba(17,26,51,.98), rgba(15,23,48,.98));
-      border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.45);
+      border-radius:18px;
+      box-shadow:0 30px 80px rgba(0,0,0,.45);
       overflow:hidden;
+      display:flex;
+      flex-direction:column;
     }
-    .modalHead{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line);background:rgba(0,0,0,.18)}
+    .modalHead{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      padding:12px 14px;border-bottom:1px solid var(--line);background:rgba(0,0,0,.22);
+      position:sticky;top:0;z-index:3;
+    }
     .modalHead strong{font-size:14px}
-    .modalBody{padding:14px;display:grid;gap:12px}
+    .modalBody{
+      padding:14px;
+      overflow:auto;
+      -webkit-overflow-scrolling: touch;
+      display:grid;
+      gap:12px;
+    }
+    .modalFoot{
+      padding:12px 14px;border-top:1px solid var(--line);
+      display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;
+      position:sticky;bottom:0;z-index:3;
+      background:rgba(15,23,48,.92);
+      backdrop-filter: blur(10px);
+    }
+
     .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
     input, textarea, select{
@@ -127,21 +158,80 @@
       background:rgba(255,255,255,.06);color:var(--text);outline:none;
     }
     textarea{min-height:88px;resize:vertical}
-    .modalFoot{padding:12px 14px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
     .small{font-size:12px;color:var(--muted)}
     .warn{border:1px solid rgba(255,92,122,.35);background:rgba(255,92,122,.10);padding:10px 12px;border-radius:14px}
-    .cardLite{border:1px solid var(--line);background:rgba(255,255,255,.04);border-radius:14px;padding:12px}
-    .weeksTable{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--line);border-radius:14px;overflow:hidden}
-    .weeksTable th,.weeksTable td{border-bottom:1px solid var(--line);padding:10px;font-size:12px;vertical-align:top}
-    .weeksTable th{background:rgba(255,255,255,.04);color:var(--muted);text-align:right;font-weight:900}
-    .weeksTable tr:last-child td{border-bottom:none}
-    .miniBtn{padding:8px 10px;border-radius:10px;font-size:12px;font-weight:900}
-    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;}
+
+    .tabs{
+      display:flex;gap:10px;flex-wrap:wrap;
+      border-bottom:1px solid var(--line);
+      padding-bottom:10px;
+    }
+    .tabBtn{
+      padding:10px 12px;border-radius:999px;border:1px solid var(--line);
+      background:rgba(255,255,255,.06);cursor:pointer;font-weight:900;color:var(--text);
+    }
+    .tabBtn.active{
+      background:rgba(124,92,255,.28);
+      border-color:rgba(124,92,255,.55);
+    }
+    .tabPane{display:none}
+    .tabPane.active{display:block}
+
+    .cardLite{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      border-radius:14px;
+      padding:12px;
+    }
+    .weeksWrap{
+      border:1px solid var(--line);
+      border-radius:14px;
+      overflow:hidden;
+      background:rgba(255,255,255,.03);
+    }
+    .weeksToolbar{
+      display:flex;gap:8px;justify-content:space-between;align-items:center;flex-wrap:wrap;
+      padding:10px;border-bottom:1px solid var(--line);
+      background:rgba(0,0,0,.16);
+    }
+    .weeksTable{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      min-width:900px;
+    }
+    .weeksTable th, .weeksTable td{
+      border-bottom:1px solid var(--line);
+      padding:10px;
+      font-size:12px;
+      vertical-align:middle;
+      white-space:nowrap;
+    }
+    .weeksTable th{
+      background:rgba(255,255,255,.04);
+      color:var(--muted);
+      text-align:right;
+      font-weight:900;
+      position:sticky;top:0;z-index:2;
+    }
+    .weeksScroll{
+      max-height: 55vh;
+      overflow:auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .miniBtn{
+      padding:8px 10px;border-radius:10px;font-size:12px;font-weight:900
+    }
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+
+    .dangerTxt{color:rgba(255,92,122,.95)}
+    .okTxt{color:rgba(47,231,164,.95)}
+
     @media (max-width: 860px){
       .row{grid-template-columns:1fr}
       .topbar{flex-direction:column;align-items:stretch}
       .actions{justify-content:space-between}
-      .weeksTable{display:block;overflow-x:auto}
+      .weeksTable{min-width:860px}
     }
   </style>
 </head>
@@ -175,7 +265,7 @@
 
   <!-- Auth Modal -->
   <div class="modalBack" id="authBack">
-    <div class="modal" style="width:min(520px, 100%);">
+    <div class="modal" style="width:min(560px, 100%);">
       <div class="modalHead">
         <strong>تسجيل الدخول</strong>
         <button id="closeAuth">إغلاق</button>
@@ -202,82 +292,108 @@
     </div>
   </div>
 
-  <!-- Admin Modal -->
+  <!-- Admin Modal (Beautiful + Tabs) -->
   <div class="modalBack" id="adminBack">
     <div class="modal">
       <div class="modalHead">
         <strong>لوحة المدير</strong>
-        <button id="closeAdmin">إغلاق</button>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span class="small">إضافة الأعضاء تتم من Firebase Console فقط</span>
+          <button id="closeAdmin">إغلاق</button>
+        </div>
       </div>
 
       <div class="modalBody">
-        <div class="cardLite">
-          <div style="font-weight:900;margin-bottom:8px">إضافة حدث عام (يظهر للجميع)</div>
-          <div class="row">
-            <div>
-              <label>تاريخ الحدث (عام)</label>
-              <input id="pubDate" type="date" />
+        <div class="tabs">
+          <button class="tabBtn active" data-tab="tabPublic">الأحداث العامة</button>
+          <button class="tabBtn" data-tab="tabWeeks">إدارة الأسابيع</button>
+        </div>
+
+        <!-- Tab: Public Events -->
+        <div id="tabPublic" class="tabPane active">
+          <div class="cardLite">
+            <div style="font-weight:900;margin-bottom:8px">إضافة حدث عام (يظهر للجميع)</div>
+            <div class="row">
+              <div>
+                <label>تاريخ الحدث (عام)</label>
+                <input id="pubDate" type="date" />
+              </div>
+              <div>
+                <label>لون الحدث</label>
+                <input id="pubColor" type="color" value="#7c5cff" />
+              </div>
             </div>
-            <div>
-              <label>لون الحدث</label>
-              <input id="pubColor" type="color" value="#7c5cff" />
+
+            <div style="margin-top:10px">
+              <label>عنوان الحدث (عام)</label>
+              <input id="pubTitle" type="text" placeholder="مثال: بداية الاختبارات" />
             </div>
-          </div>
-          <div style="margin-top:10px">
-            <label>عنوان الحدث (عام)</label>
-            <input id="pubTitle" type="text" placeholder="مثال: بداية الاختبارات" />
-          </div>
-          <div style="margin-top:10px">
-            <label>ملاحظات (اختياري)</label>
-            <textarea id="pubNote" placeholder="تفاصيل..."></textarea>
-          </div>
-          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px">
-            <button id="addPublicEvent" class="primary">إضافة الحدث العام</button>
+
+            <div style="margin-top:10px">
+              <label>ملاحظات (اختياري)</label>
+              <textarea id="pubNote" placeholder="تفاصيل..."></textarea>
+            </div>
+
+            <div class="small" style="margin-top:10px">
+              💡 نصيحة: يمكنك إضافة الأحداث العامة من هنا، وستظهر فورًا لكل المستخدمين.
+            </div>
           </div>
         </div>
 
-        <div class="cardLite">
-          <div style="display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap">
-            <div style="font-weight:900">إدارة الأسابيع (بداية الأحد + عنوان + رقم الأسبوع + إضافة/حذف)</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button id="btnAddWeek" class="miniBtn">+ إضافة أسبوع</button>
-              <button id="btnAddVac" class="miniBtn">+ إضافة إجازة</button>
-              <button id="btnSaveWeeks" class="miniBtn primary">حفظ الأسابيع</button>
+        <!-- Tab: Weeks -->
+        <div id="tabWeeks" class="tabPane">
+          <div class="cardLite">
+            <div style="display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap">
+              <div style="font-weight:900">إدارة الأسابيع</div>
+              <div class="small">
+                <span class="okTxt">week</span> = أسبوع دراسي | <span class="dangerTxt">vac</span> = إجازة
+              </div>
+            </div>
+            <div class="small" style="margin-top:8px">
+              - <b>startDateISO</b> هو تاريخ <b>الأحد</b> لبداية الأسبوع. <br>
+              - رتّب الأسابيع عبر <b>order</b> ثم اضغط <b>حفظ الأسابيع</b>.
             </div>
           </div>
 
-          <div class="small" style="margin-top:8px">
-            - <b>startDateISO</b> هو تاريخ <b>الأحد</b> لبداية الأسبوع. <br>
-            - نوع <b>vac</b> للإجازة (أسبوع إجازة) ولا يحتاج رقم أسبوع.
-          </div>
+          <div class="weeksWrap">
+            <div class="weeksToolbar">
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button id="btnAddWeek" class="miniBtn">+ إضافة أسبوع</button>
+                <button id="btnAddVac" class="miniBtn">+ إضافة إجازة</button>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button id="btnSaveWeeks" class="miniBtn primary">حفظ الأسابيع</button>
+              </div>
+            </div>
 
-          <div style="margin-top:12px">
-            <table class="weeksTable" id="weeksTable">
-              <thead>
-                <tr>
-                  <th>الترتيب</th>
-                  <th>النوع</th>
-                  <th>رقم الأسبوع</th>
-                  <th>العنوان</th>
-                  <th>بداية الأسبوع (أحد)</th>
-                  <th>إجراءات</th>
-                </tr>
-              </thead>
-              <tbody id="weeksTbody"></tbody>
-            </table>
+            <div class="weeksScroll">
+              <table class="weeksTable" id="weeksTable">
+                <thead>
+                  <tr>
+                    <th>order</th>
+                    <th>type</th>
+                    <th>weekNumber</th>
+                    <th>title</th>
+                    <th>startDateISO (أحد)</th>
+                    <th>إجراءات</th>
+                  </tr>
+                </thead>
+                <tbody id="weeksTbody"></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
 
       <div class="modalFoot">
-        <div class="small" style="margin-left:auto">إضافة الأعضاء تتم من Firebase Console فقط.</div>
+        <button id="addPublicEvent" class="primary">حفظ / إضافة الحدث العام</button>
       </div>
     </div>
   </div>
 
   <!-- My Modal -->
   <div class="modalBack" id="myBack">
-    <div class="modal" style="width:min(720px, 100%);">
+    <div class="modal" style="width:min(760px, 100%);">
       <div class="modalHead">
         <strong>إضافة حدث خاص (يظهر لك فقط)</strong>
         <button id="closeMy">إغلاق</button>
@@ -303,6 +419,10 @@
           <label>ملاحظات (اختياري)</label>
           <textarea id="priNote" placeholder="تفاصيل..."></textarea>
         </div>
+
+        <div class="small">
+          💡 تلميح: تستطيع الضغط على أي يوم داخل التقويم لفتح إضافة حدث خاص بسرعة.
+        </div>
       </div>
       <div class="modalFoot">
         <button id="addPrivateEvent" class="primary">إضافة الحدث الخاص</button>
@@ -323,7 +443,7 @@
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
   /* ========= (1) ضع إعدادات Firebase هنا ========= */
- const firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyAulObTByvUjUgz_8QD3el0DRKacmbdH9Y",
   authDomain: "calendar-w-2fcbe.firebaseapp.com",
   projectId: "calendar-w-2fcbe",
@@ -333,7 +453,7 @@
   measurementId: "G-MSBWPX2C75"
 };
 
-  /* ========= (2) ضع بريد/بريدين المدير ========= */
+  /* ========= (2) بريد المدير ========= */
   const ADMIN_EMAILS = ["ensancom@gmail.com"];
   const ADMIN_EMAILS_NORM = ADMIN_EMAILS.map(e => (e||"").trim().toLowerCase());
 
@@ -389,21 +509,19 @@
     : null;
   const fmtG = new Intl.DateTimeFormat("ar-SA", { year:"numeric", month:"2-digit", day:"2-digit" });
 
-  /* ========= Default fallback week plan (if no publicWeeks) ========= */
+  /* ========= Default fallback plan if publicWeeks empty ========= */
   function buildDefaultWeekPlan(){
     const plan = [];
-    for(let w=16; w<=19; w++) plan.push({ key:`W${w}`, type:"week", defaultTitle:`الأسبوع ${w}` });
-    plan.push({ key:`VAC1`, type:"vac", defaultTitle:"إجازة (أسبوع)" });
-    for(let w=1; w<=18; w++) plan.push({ key:`W${w}`, type:"week", defaultTitle:`الأسبوع ${w}` });
+    for(let w=16; w<=19; w++) plan.push({ type:"week", weekNumber:w, title:`الأسبوع ${w}` });
+    plan.push({ type:"vac", weekNumber:0, title:"إجازة (أسبوع)" });
+    for(let w=1; w<=18; w++) plan.push({ type:"week", weekNumber:w, title:`الأسبوع ${w}` });
     return plan;
   }
-  const weekPlan = buildDefaultWeekPlan();
+  const basePlan = buildDefaultWeekPlan();
 
   function findGregorianForHijriFallback(){
     if(!hasUmalqura) return startOfWeekSunday(new Date());
-    const targetY = 1447;
-    const targetDay = 23;
-    const monthName = "جمادى الآخرة";
+    const targetY = 1447, targetDay = 23, monthName = "جمادى الآخرة";
     const from = new Date("2025-06-01");
     const to = new Date("2026-06-30");
     const fmt = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura", { year:"numeric", month:"long", day:"numeric" });
@@ -420,12 +538,12 @@
   const fallbackStartSunday = findGregorianForHijriFallback();
 
   function defaultWeeksFromFallback(){
-    return weekPlan.map((w, i)=>({
+    return basePlan.map((w, i)=>({
       id: null,
       order: i+1,
       type: w.type,
-      weekNumber: (w.type === "week" && w.key.startsWith("W")) ? Number(w.key.replace("W","")) : 0,
-      title: w.defaultTitle,
+      weekNumber: w.weekNumber,
+      title: w.title,
       startDateISO: toISODate(addDays(fallbackStartSunday, i*7))
     }));
   }
@@ -477,8 +595,20 @@
   const priNote = document.getElementById("priNote");
   const addPrivateEventBtn = document.getElementById("addPrivateEvent");
 
+  /* ========= Tabs logic ========= */
+  const tabButtons = Array.from(document.querySelectorAll(".tabBtn"));
+  const tabPanes = Array.from(document.querySelectorAll(".tabPane"));
+  function setActiveTab(tabId){
+    tabButtons.forEach(b => b.classList.toggle("active", b.dataset.tab === tabId));
+    tabPanes.forEach(p => p.classList.toggle("active", p.id === tabId));
+  }
+  tabButtons.forEach(btn=>{
+    btn.addEventListener("click", ()=> setActiveTab(btn.dataset.tab));
+  });
+
   function openModal(el){ el.style.display = "flex"; }
   function closeModal(el){ el.style.display = "none"; }
+
   [authBack, adminBack, myBack].forEach(back => {
     back.addEventListener("click", (e)=>{ if(e.target === back) closeModal(back); });
   });
@@ -489,7 +619,12 @@
 
   btnAuth.onclick = ()=>openModal(authBack);
   btnLogout.onclick = async ()=>{ await signOut(auth); };
-  btnAdminPanel.onclick = ()=>{ if(state.isAdmin){ renderWeeksEditor(); openModal(adminBack);} };
+  btnAdminPanel.onclick = ()=>{
+    if(!state.isAdmin) return;
+    setActiveTab("tabPublic");
+    renderWeeksEditor();
+    openModal(adminBack);
+  };
   btnMyPanel.onclick = ()=>{ if(state.user) openModal(myBack); };
 
   btnSignin.onclick = async ()=>{
@@ -575,6 +710,7 @@
   /* ========= Add Events ========= */
   addPublicEventBtn.onclick = async ()=>{
     if(!state.isAdmin) return;
+
     const dateISO = pubDate.value;
     const title = pubTitle.value.trim();
     const note = pubNote.value.trim();
@@ -593,6 +729,7 @@
 
   addPrivateEventBtn.onclick = async ()=>{
     if(!state.user) return;
+
     const dateISO = priDate.value;
     const title = priTitle.value.trim();
     const note = priNote.value.trim();
@@ -609,7 +746,7 @@
     }
   };
 
-  /* ========= Weeks Editor (Admin) ========= */
+  /* ========= Weeks Editor ========= */
   let weeksDraft = [];
 
   function normalizeWeeksDraft(){
@@ -656,7 +793,7 @@
         <td><input class="mono" data-k="weekNumber" data-i="${idx}" type="number" min="0" value="${escapeHtml(w.weekNumber)}"></td>
         <td><input data-k="title" data-i="${idx}" type="text" value="${escapeHtml(w.title)}" placeholder="عنوان الأسبوع"></td>
         <td><input class="mono" data-k="startDateISO" data-i="${idx}" type="date" value="${escapeHtml(w.startDateISO)}"></td>
-        <td style="white-space:nowrap">
+        <td>
           <button class="miniBtn danger" data-act="del" data-i="${idx}">حذف</button>
         </td>
       `;
@@ -668,6 +805,7 @@
         const i = Number(el.getAttribute("data-i"));
         const k = el.getAttribute("data-k");
         if(Number.isNaN(i) || !k) return;
+
         let v = el.value;
         if(k === "order" || k === "weekNumber") v = Number(v || 0);
         weeksDraft[i][k] = v;
@@ -689,7 +827,7 @@
         try{
           if(item.id){
             await deleteDoc(doc(db, "publicWeeks", item.id));
-          }else{
+          } else {
             weeksDraft.splice(i, 1);
             renderWeeksEditor();
           }
@@ -794,7 +932,9 @@
 
       const rangeG = `${fmtG.format(weekStart)} — ${fmtG.format(weekEnd)}`;
       const rangeH = hasUmalqura ? `${fmtHijri.format(weekStart)} — ${fmtHijri.format(weekEnd)}` : "";
-      const labelWeek = (w.type === "week" && Number(w.weekNumber||0) > 0) ? `الأسبوع الدراسي: ${Number(w.weekNumber)}` : (w.type==="vac"?"إجازة":"");
+      const labelWeek = (w.type === "week" && Number(w.weekNumber||0) > 0)
+        ? `الأسبوع الدراسي: ${Number(w.weekNumber)}`
+        : (w.type==="vac"?"إجازة":"");
 
       titleDiv.innerHTML = `
         <strong>${escapeHtml(baseTitle)}</strong>
@@ -882,4 +1022,3 @@
 </script>
 </body>
 </html>
-
