@@ -1,0 +1,765 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>التقويم الدراسي الأسبوعي (Firebase)</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --card:#111a33;
+      --text:#e8eeff;
+      --muted:#a9b6e6;
+      --line:rgba(255,255,255,.10);
+      --friSat:rgba(255, 209, 102, .18);
+      --accent:#7c5cff;
+      --ok:#2fe7a4;
+      --bad:#ff5c7a;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: Tahoma, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: radial-gradient(1200px 800px at 20% 0%, #1b2a6b 0%, transparent 55%),
+                  radial-gradient(900px 700px at 100% 30%, #4a1f6b 0%, transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    .wrap{max-width:1200px;margin:0 auto;padding:18px}
+    .topbar{
+      display:flex;gap:12px;align-items:center;justify-content:space-between;
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px 16px;
+      backdrop-filter: blur(10px);
+    }
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{
+      width:42px;height:42px;border-radius:14px;
+      background:linear-gradient(135deg, var(--accent), #35c6ff);
+      box-shadow:0 10px 30px rgba(124,92,255,.25);
+    }
+    h1{font-size:18px;margin:0}
+    .sub{font-size:12px;color:var(--muted);margin-top:2px}
+    .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    button{
+      appearance:none;border:1px solid var(--line);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      padding:10px 12px;border-radius:12px;
+      cursor:pointer;
+      transition:.15s transform, .15s background;
+      font-weight:800;
+    }
+    button:hover{transform:translateY(-1px);background:rgba(255,255,255,.09)}
+    button.primary{background:rgba(124,92,255,.25)}
+    button.danger{background:rgba(255,92,122,.18)}
+    .pill{
+      display:inline-flex;gap:8px;align-items:center;
+      padding:8px 10px;border-radius:999px;border:1px solid var(--line);
+      background:rgba(255,255,255,.06);font-size:12px;color:var(--muted);
+    }
+    .dot{width:10px;height:10px;border-radius:50%}
+    .dot.admin{background:var(--ok)}
+    .dot.user{background:rgba(53,198,255,.7)}
+    .dot.guest{background:rgba(255,255,255,.35)}
+    .grid{margin-top:14px;display:grid;grid-template-columns:1fr;gap:14px}
+    .weekCard{
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border-radius:18px;
+      overflow:hidden;
+    }
+    .weekHead{
+      display:flex;justify-content:space-between;align-items:center;gap:10px;
+      padding:12px 14px;background:rgba(0,0,0,.18);border-bottom:1px solid var(--line);
+    }
+    .weekTitle{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+    .weekTitle strong{font-size:14px}
+    .weekTitle span{font-size:12px;color:var(--muted)}
+    .table{display:grid;grid-template-columns:repeat(7,1fr);border-top:1px solid var(--line)}
+    .th,.td{padding:10px;border-left:1px solid var(--line);border-bottom:1px solid var(--line);min-height:96px;position:relative}
+    .th{min-height:auto;font-weight:900;background:rgba(255,255,255,.04);text-align:center;padding:10px 6px}
+    .th.friSat,.td.friSat{background:var(--friSat)}
+    .th:last-child,.td:last-child{border-left:none}
+    .gDate{font-size:12px;color:var(--muted)}
+    .hDate{font-size:12px}
+    .todayBadge{
+      position:absolute;top:8px;left:8px;font-size:11px;padding:4px 8px;border-radius:999px;
+      border:1px solid rgba(47,231,164,.5);background:rgba(47,231,164,.12);color:var(--ok);font-weight:900;
+    }
+    .events{margin-top:8px;display:flex;flex-direction:column;gap:6px}
+    .event{
+      padding:6px 8px;border-radius:10px;font-size:12px;line-height:1.2;
+      border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);
+      display:flex;gap:8px;align-items:center;justify-content:space-between;
+    }
+    .event .tag{width:10px;height:10px;border-radius:3px;flex:0 0 auto;background:var(--accent)}
+    .event .txt{flex:1 1 auto}
+    .event .x{color:rgba(255,255,255,.7);cursor:pointer;font-weight:900;padding:0 6px;border-radius:8px}
+    .event .x:hover{background:rgba(255,255,255,.08)}
+    .badgeScope{
+      font-size:10px;padding:3px 7px;border-radius:999px;border:1px solid rgba(255,255,255,.18);
+      color:rgba(255,255,255,.9);background:rgba(0,0,0,.18);font-weight:900
+    }
+    .hint{
+      font-size:12px;color:var(--muted);margin-top:10px;padding:10px 12px;border:1px dashed rgba(255,255,255,.18);
+      border-radius:14px;background:rgba(255,255,255,.04);
+    }
+    .modalBack{
+      position:fixed;inset:0;background:rgba(0,0,0,.55);
+      display:none;align-items:center;justify-content:center;padding:16px;z-index:50;
+    }
+    .modal{
+      width:min(720px, 100%);
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(17,26,51,.98), rgba(15,23,48,.98));
+      border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.45);
+      overflow:hidden;
+    }
+    .modalHead{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line);background:rgba(0,0,0,.18)}
+    .modalHead strong{font-size:14px}
+    .modalBody{padding:14px;display:grid;gap:12px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
+    input, textarea, select{
+      width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);
+      background:rgba(255,255,255,.06);color:var(--text);outline:none;
+    }
+    textarea{min-height:88px;resize:vertical}
+    .modalFoot{padding:12px 14px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+    .small{font-size:12px;color:var(--muted)}
+    .warn{border:1px solid rgba(255,92,122,.35);background:rgba(255,92,122,.10);padding:10px 12px;border-radius:14px}
+    @media (max-width: 860px){
+      .row{grid-template-columns:1fr}
+      .topbar{flex-direction:column;align-items:stretch}
+      .actions{justify-content:space-between}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <h1>التقويم الدراسي الأسبوعي</h1>
+          <div class="sub">عام للجميع + خاص لكل مستخدم (Firebase)</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <span id="rolePill" class="pill"><span class="dot guest"></span><span>زائر</span></span>
+
+        <button id="btnAuth" class="primary">تسجيل / دخول</button>
+        <button id="btnLogout" style="display:none;">خروج</button>
+
+        <button id="btnAdminPanel" style="display:none;">لوحة المدير</button>
+        <button id="btnMyPanel" style="display:none;">إضافة حدث خاص</button>
+      </div>
+    </div>
+
+    <div class="hint" id="compatHint">
+      ملاحظة: إظهار التاريخ الهجري يعتمد على دعم المتصفح لـ <b>Intl islamic-umalqura</b>.
+    </div>
+
+    <div class="grid" id="weeksGrid"></div>
+  </div>
+
+  <!-- Modal: Auth -->
+  <div class="modalBack" id="authBack">
+    <div class="modal">
+      <div class="modalHead">
+        <strong>تسجيل / دخول</strong>
+        <button id="closeAuth">إغلاق</button>
+      </div>
+      <div class="modalBody">
+        <div class="row">
+          <div>
+            <label>البريد الإلكتروني</label>
+            <input id="authEmail" type="email" placeholder="name@example.com" />
+          </div>
+          <div>
+            <label>كلمة المرور</label>
+            <input id="authPass" type="password" placeholder="••••••••" />
+          </div>
+        </div>
+        <div class="small">إذا ما عنده حساب: اختر "تسجيل جديد".</div>
+      </div>
+      <div class="modalFoot">
+        <button id="btnSignup">تسجيل جديد</button>
+        <button id="btnSignin" class="primary">دخول</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Admin Panel (Public) -->
+  <div class="modalBack" id="adminBack">
+    <div class="modal">
+      <div class="modalHead">
+        <strong>لوحة المدير (أحداث عامة + عناوين الأسابيع)</strong>
+        <button id="closeAdmin">إغلاق</button>
+      </div>
+      <div class="modalBody">
+        <div class="warn">
+          <b>عام:</b> الأحداث التي تضيفها هنا يراها الجميع.
+        </div>
+
+        <div class="row">
+          <div>
+            <label>تعديل عنوان أسبوع</label>
+            <select id="weekSelect"></select>
+          </div>
+          <div>
+            <label>العنوان الجديد</label>
+            <input id="weekTitleInput" type="text" placeholder="مثال: الأسبوع 16" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>تاريخ الحدث (عام)</label>
+            <input id="pubDate" type="date" />
+          </div>
+          <div>
+            <label>لون الحدث</label>
+            <input id="pubColor" type="color" value="#7c5cff" />
+          </div>
+        </div>
+
+        <div>
+          <label>عنوان الحدث (عام)</label>
+          <input id="pubTitle" type="text" placeholder="مثال: بداية الاختبارات" />
+        </div>
+
+        <div>
+          <label>ملاحظات (اختياري)</label>
+          <textarea id="pubNote" placeholder="تفاصيل..."></textarea>
+        </div>
+      </div>
+      <div class="modalFoot">
+        <button id="saveWeekTitle">حفظ عنوان الأسبوع</button>
+        <button id="addPublicEvent" class="primary">إضافة الحدث العام</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: My Panel (Private) -->
+  <div class="modalBack" id="myBack">
+    <div class="modal">
+      <div class="modalHead">
+        <strong>إضافة حدث خاص (يظهر لك فقط)</strong>
+        <button id="closeMy">إغلاق</button>
+      </div>
+      <div class="modalBody">
+        <div class="row">
+          <div>
+            <label>تاريخ الحدث (خاص)</label>
+            <input id="priDate" type="date" />
+          </div>
+          <div>
+            <label>لون الحدث</label>
+            <input id="priColor" type="color" value="#35c6ff" />
+          </div>
+        </div>
+
+        <div>
+          <label>عنوان الحدث (خاص)</label>
+          <input id="priTitle" type="text" placeholder="مثال: متابعة متدرب" />
+        </div>
+
+        <div>
+          <label>ملاحظات (اختياري)</label>
+          <textarea id="priNote" placeholder="تفاصيل..."></textarea>
+        </div>
+      </div>
+      <div class="modalFoot">
+        <button id="addPrivateEvent" class="primary">إضافة الحدث الخاص</button>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import {
+    getAuth, onAuthStateChanged,
+    createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import {
+    getFirestore, collection, doc, setDoc, addDoc, deleteDoc,
+    onSnapshot, query, orderBy
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  /* ========= (1) ضع إعدادات Firebase هنا ========= */
+    const firebaseConfig = {
+    apiKey: "AIzaSyAulObTByvUjUgz_8QD3el0DRKacmbdH9Y",
+    authDomain: "calendar-w-2fcbe.firebaseapp.com",
+    projectId: "calendar-w-2fcbe",
+    storageBucket: "calendar-w-2fcbe.firebasestorage.app",
+    messagingSenderId: "544490738732",
+    appId: "1:544490738732:web:f1008e65eaa0c83b23ed89",
+    measurementId: "G-MSBWPX2C75"
+  };
+
+  /* ========= (2) ضع بريد/بريدين المدير ========= */
+  const ADMIN_EMAILS = [
+    "ensancom@gmail.COM"
+  ];
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  /* ========= Umm al-Qura ========= */
+  const hasUmalqura = (() => {
+    try{
+      const fmt = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura", { day:"numeric" });
+      return !!fmt.format(new Date());
+    }catch(e){ return false; }
+  })();
+
+  const compatHint = document.getElementById("compatHint");
+  compatHint.style.display = hasUmalqura ? "none" : "block";
+
+  const fmtHijri = hasUmalqura
+    ? new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura", { weekday:"long", year:"numeric", month:"long", day:"numeric" })
+    : null;
+
+  const fmtG = new Intl.DateTimeFormat("ar-SA", { year:"numeric", month:"2-digit", day:"2-digit" });
+
+  function toISODate(d){
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,"0");
+    const da = String(d.getDate()).padStart(2,"0");
+    return `${y}-${m}-${da}`;
+  }
+  function startOfWeekSunday(d){
+    const x = new Date(d);
+    const day = x.getDay();
+    x.setDate(x.getDate() - day);
+    x.setHours(0,0,0,0);
+    return x;
+  }
+  function addDays(d, n){
+    const x = new Date(d);
+    x.setDate(x.getDate() + n);
+    return x;
+  }
+
+  // إيجاد الأحد الموافق لـ 23 جمادى الآخرة 1447 ضمن نطاق مناسب
+  function findGregorianForHijri(){
+    if(!hasUmalqura) return startOfWeekSunday(new Date());
+    const targetY = 1447;
+    const targetDay = 23;
+    const monthName = "جمادى الآخرة";
+    const from = new Date("2025-06-01");
+    const to = new Date("2026-06-30");
+    const fmt = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura", { year:"numeric", month:"long", day:"numeric" });
+
+    for(let t = new Date(from); t <= to; t = addDays(t, 1)){
+      const s = fmt.format(t);
+      const latin = s.replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+      if(s.includes(monthName) && latin.includes(String(targetDay)) && latin.includes(String(targetY))){
+        return startOfWeekSunday(t);
+      }
+    }
+    return startOfWeekSunday(new Date());
+  }
+
+  /* ========= Academic weeks ========= */
+  function buildWeekPlan(){
+    const plan = [];
+    for(let w=16; w<=19; w++) plan.push({ key:`W${w}`, type:"week", defaultTitle:`الأسبوع ${w}` });
+    plan.push({ key:`VAC1`, type:"vac", defaultTitle:"إجازة (أسبوع)" });
+    for(let w=1; w<=18; w++) plan.push({ key:`W${w}`, type:"week", defaultTitle:`الأسبوع ${w}` });
+    return plan;
+  }
+  const weekPlan = buildWeekPlan();
+  const startSunday = findGregorianForHijri();
+
+  /* ========= UI ========= */
+  const days = [
+    {name:"الأحد", off:false},
+    {name:"الإثنين", off:false},
+    {name:"الثلاثاء", off:false},
+    {name:"الأربعاء", off:false},
+    {name:"الخميس", off:false},
+    {name:"الجمعة", off:true},
+    {name:"السبت", off:true},
+  ];
+
+  const weeksGrid = document.getElementById("weeksGrid");
+  const rolePill = document.getElementById("rolePill");
+  const btnAuth = document.getElementById("btnAuth");
+  const btnLogout = document.getElementById("btnLogout");
+  const btnAdminPanel = document.getElementById("btnAdminPanel");
+  const btnMyPanel = document.getElementById("btnMyPanel");
+
+  // Auth modal
+  const authBack = document.getElementById("authBack");
+  const closeAuth = document.getElementById("closeAuth");
+  const authEmail = document.getElementById("authEmail");
+  const authPass = document.getElementById("authPass");
+  const btnSignup = document.getElementById("btnSignup");
+  const btnSignin = document.getElementById("btnSignin");
+
+  // Admin modal
+  const adminBack = document.getElementById("adminBack");
+  const closeAdmin = document.getElementById("closeAdmin");
+  const weekSelect = document.getElementById("weekSelect");
+  const weekTitleInput = document.getElementById("weekTitleInput");
+  const saveWeekTitle = document.getElementById("saveWeekTitle");
+  const pubDate = document.getElementById("pubDate");
+  const pubColor = document.getElementById("pubColor");
+  const pubTitle = document.getElementById("pubTitle");
+  const pubNote = document.getElementById("pubNote");
+  const addPublicEventBtn = document.getElementById("addPublicEvent");
+
+  // My modal
+  const myBack = document.getElementById("myBack");
+  const closeMy = document.getElementById("closeMy");
+  const priDate = document.getElementById("priDate");
+  const priColor = document.getElementById("priColor");
+  const priTitle = document.getElementById("priTitle");
+  const priNote = document.getElementById("priNote");
+  const addPrivateEventBtn = document.getElementById("addPrivateEvent");
+
+  function openModal(el){ el.style.display = "flex"; }
+  function closeModal(el){ el.style.display = "none"; }
+  [authBack, adminBack, myBack].forEach(back => {
+    back.addEventListener("click", (e)=>{ if(e.target === back) closeModal(back); });
+  });
+
+  closeAuth.onclick = ()=>closeModal(authBack);
+  closeAdmin.onclick = ()=>closeModal(adminBack);
+  closeMy.onclick = ()=>closeModal(myBack);
+
+  btnAuth.onclick = ()=>openModal(authBack);
+  btnAdminPanel.onclick = ()=>{
+    if(!state.isAdmin) return;
+    fillWeekSelect();
+    openModal(adminBack);
+  };
+  btnMyPanel.onclick = ()=>{
+    if(!state.user) return;
+    openModal(myBack);
+  };
+  btnLogout.onclick = async ()=>{ await signOut(auth); };
+
+  btnSignup.onclick = async ()=>{
+    const email = authEmail.value.trim();
+    const pass = authPass.value;
+    if(!email || !pass) return alert("أدخل البريد وكلمة المرور.");
+    try{
+      await createUserWithEmailAndPassword(auth, email, pass);
+      closeModal(authBack);
+    }catch(err){
+      alert(err?.message || "فشل التسجيل.");
+    }
+  };
+
+  btnSignin.onclick = async ()=>{
+    const email = authEmail.value.trim();
+    const pass = authPass.value;
+    if(!email || !pass) return alert("أدخل البريد وكلمة المرور.");
+    try{
+      await signInWithEmailAndPassword(auth, email, pass);
+      closeModal(authBack);
+    }catch(err){
+      alert(err?.message || "فشل الدخول.");
+    }
+  };
+
+  function fillWeekSelect(){
+    weekSelect.innerHTML = "";
+    weekPlan.forEach((w, i)=>{
+      const opt = document.createElement("option");
+      opt.value = w.key;
+      opt.textContent = `${i+1}) ${state.weekTitles[w.key] || w.defaultTitle}`;
+      weekSelect.appendChild(opt);
+    });
+    const sel = weekSelect.value || weekPlan[0].key;
+    weekTitleInput.value = state.weekTitles[sel] || weekPlan.find(x=>x.key===sel).defaultTitle;
+    weekSelect.onchange = ()=>{
+      const k = weekSelect.value;
+      weekTitleInput.value = state.weekTitles[k] || weekPlan.find(x=>x.key===k).defaultTitle;
+    };
+  }
+
+  saveWeekTitle.onclick = async ()=>{
+    if(!state.isAdmin) return;
+    const key = weekSelect.value;
+    const title = weekTitleInput.value.trim();
+    if(!key) return;
+    try{
+      await setDoc(doc(db, "publicWeekTitles", key), { title }, { merge:true });
+      alert("تم حفظ عنوان الأسبوع.");
+    }catch(err){
+      alert(err?.message || "فشل حفظ عنوان الأسبوع.");
+    }
+  };
+
+  addPublicEventBtn.onclick = async ()=>{
+    if(!state.isAdmin) return;
+    const dateISO = pubDate.value;
+    const title = pubTitle.value.trim();
+    const note = pubNote.value.trim();
+    const color = pubColor.value || "#7c5cff";
+    if(!dateISO) return alert("اختر تاريخ الحدث.");
+    if(!title) return alert("اكتب عنوان الحدث.");
+
+    try{
+      await addDoc(collection(db, "publicEvents"), {
+        dateISO, title, note, color,
+        createdAt: Date.now()
+      });
+      pubTitle.value = "";
+      pubNote.value = "";
+      alert("تمت إضافة الحدث العام.");
+    }catch(err){
+      alert(err?.message || "فشل إضافة الحدث العام.");
+    }
+  };
+
+  addPrivateEventBtn.onclick = async ()=>{
+    if(!state.user) return;
+    const dateISO = priDate.value;
+    const title = priTitle.value.trim();
+    const note = priNote.value.trim();
+    const color = priColor.value || "#35c6ff";
+    if(!dateISO) return alert("اختر تاريخ الحدث.");
+    if(!title) return alert("اكتب عنوان الحدث.");
+
+    try{
+      await addDoc(collection(db, `users/${state.user.uid}/privateEvents`), {
+        dateISO, title, note, color,
+        createdAt: Date.now()
+      });
+      priTitle.value = "";
+      priNote.value = "";
+      alert("تمت إضافة الحدث الخاص (يظهر لك فقط).");
+    }catch(err){
+      alert(err?.message || "فشل إضافة الحدث الخاص.");
+    }
+  };
+
+  function escapeHtml(str){
+    return String(str || "")
+      .replaceAll("&","&amp;").replaceAll("<","&lt;")
+      .replaceAll(">","&gt;").replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  /* ========= State + listeners ========= */
+  const state = {
+    user: null,
+    isAdmin: false,
+    publicEvents: [],
+    privateEvents: [],
+    weekTitles: {}
+  };
+
+  let unsubPublic = null;
+  let unsubPrivate = null;
+  let unsubWeeks = null;
+
+  function setRolePill(){
+    if(state.isAdmin){
+      rolePill.innerHTML = `<span class="dot admin"></span><span>مدير: ${escapeHtml(state.user.email)}</span>`;
+    } else if(state.user){
+      rolePill.innerHTML = `<span class="dot user"></span><span>مستخدم: ${escapeHtml(state.user.email)}</span>`;
+    } else {
+      rolePill.innerHTML = `<span class="dot guest"></span><span>زائر</span>`;
+    }
+    btnLogout.style.display = state.user ? "inline-block" : "none";
+    btnAdminPanel.style.display = state.isAdmin ? "inline-block" : "none";
+    btnMyPanel.style.display = state.user ? "inline-block" : "none";
+  }
+
+  function listenWeekTitles(){
+    const col = collection(db, "publicWeekTitles");
+    return onSnapshot(col, (snap)=>{
+      const map = {};
+      snap.docs.forEach(d => map[d.id] = (d.data()?.title || ""));
+      state.weekTitles = map;
+      render();
+    });
+  }
+
+  function listenPublicEvents(){
+    const qy = query(collection(db, "publicEvents"), orderBy("dateISO", "asc"));
+    return onSnapshot(qy, (snap)=>{
+      state.publicEvents = snap.docs.map(d => ({ id:d.id, scope:"public", ...d.data() }));
+      render();
+    });
+  }
+
+  function listenPrivateEvents(uid){
+    const qy = query(collection(db, `users/${uid}/privateEvents`), orderBy("dateISO", "asc"));
+    return onSnapshot(qy, (snap)=>{
+      state.privateEvents = snap.docs.map(d => ({ id:d.id, scope:"private", ...d.data() }));
+      render();
+    });
+  }
+
+  async function deleteEvent(ev){
+    try{
+      if(ev.scope === "public"){
+        if(!state.isAdmin) return;
+        await deleteDoc(doc(db, "publicEvents", ev.id));
+      } else {
+        if(!state.user) return;
+        await deleteDoc(doc(db, `users/${state.user.uid}/privateEvents`, ev.id));
+      }
+    }catch(err){
+      alert(err?.message || "فشل الحذف.");
+    }
+  }
+
+  onAuthStateChanged(auth, (user)=>{
+    state.user = user;
+    state.isAdmin = !!user && ADMIN_EMAILS.includes(user.email);
+
+    // restart listeners
+    if(unsubPublic) unsubPublic();
+    if(unsubPrivate) unsubPrivate();
+    if(unsubWeeks) unsubWeeks();
+
+    unsubWeeks = listenWeekTitles();
+    unsubPublic = listenPublicEvents();
+    unsubPrivate = user ? listenPrivateEvents(user.uid) : null;
+
+    setRolePill();
+    render();
+  });
+
+  /* ========= Render calendar ========= */
+  function render(){
+    setRolePill();
+
+    const events = [...state.publicEvents, ...state.privateEvents];
+    const titles = state.weekTitles;
+
+    const todayISO = toISODate(new Date());
+    weeksGrid.innerHTML = "";
+
+    weekPlan.forEach((w, wi)=>{
+      const weekStart = addDays(startSunday, wi*7);
+      const weekEnd = addDays(weekStart, 6);
+
+      const card = document.createElement("div");
+      card.className = "weekCard";
+
+      const head = document.createElement("div");
+      head.className = "weekHead";
+
+      const title = document.createElement("div");
+      title.className = "weekTitle";
+
+      const shownTitle = (titles[w.key] && titles[w.key].trim()) ? titles[w.key] : w.defaultTitle;
+      const rangeG = `${fmtG.format(weekStart)} — ${fmtG.format(weekEnd)}`;
+      const rangeH = hasUmalqura ? `${fmtHijri.format(weekStart)} — ${fmtHijri.format(weekEnd)}` : "";
+
+      title.innerHTML = `
+        <strong>${escapeHtml(shownTitle)}</strong>
+        <span>(${escapeHtml(rangeG)}${hasUmalqura ? " | " + escapeHtml(rangeH) : ""})</span>
+      `;
+
+      head.appendChild(title);
+      card.appendChild(head);
+
+      const table = document.createElement("div");
+      table.className = "table";
+
+      days.forEach(d=>{
+        const th = document.createElement("div");
+        th.className = "th" + (d.off ? " friSat" : "");
+        th.textContent = d.name;
+        table.appendChild(th);
+      });
+
+      days.forEach((d, di)=>{
+        const date = addDays(weekStart, di);
+        const iso = toISODate(date);
+
+        const td = document.createElement("div");
+        td.className = "td" + (d.off ? " friSat" : "");
+
+        const hTxt = hasUmalqura ? fmtHijri.format(date) : "—";
+        td.innerHTML = `
+          <div class="gDate">${escapeHtml(fmtG.format(date))}</div>
+          <div class="hDate">${escapeHtml(hTxt)}</div>
+        `;
+
+        if(iso === todayISO){
+          const b = document.createElement("div");
+          b.className = "todayBadge";
+          b.textContent = "اليوم";
+          td.appendChild(b);
+        }
+
+        const evWrap = document.createElement("div");
+        evWrap.className = "events";
+
+        events.filter(e => e.dateISO === iso).forEach(ev=>{
+          const item = document.createElement("div");
+          item.className = "event";
+          item.innerHTML = `
+            <span class="tag" style="background:${ev.color || "#7c5cff"}"></span>
+            <div class="txt">
+              <div style="font-weight:900">${escapeHtml(ev.title)}</div>
+              ${ev.note ? `<div class="small">${escapeHtml(ev.note)}</div>` : ""}
+              <div style="margin-top:6px;display:flex;gap:6px;align-items:center">
+                <span class="badgeScope">${ev.scope === "public" ? "عام" : "خاص"}</span>
+              </div>
+            </div>
+            ${(ev.scope==="private" && state.user) || (ev.scope==="public" && state.isAdmin) ? `<div class="x" title="حذف">×</div>` : ""}
+          `;
+          const x = item.querySelector(".x");
+          if(x){
+            x.onclick = ()=>{
+              if(confirm("حذف الحدث؟")) deleteEvent(ev);
+            };
+          }
+          evWrap.appendChild(item);
+        });
+
+        td.appendChild(evWrap);
+
+        // click to quick add
+        td.style.cursor = state.user ? "pointer" : "default";
+        td.onclick = ()=>{
+          if(!state.user) return;
+          // مدير يقدر يختار سريعاً: افتح لوحة المدير لو يبغى عام، وإلا خاص
+          if(state.isAdmin){
+            // افتراضي: خاص (حسب طلبك)، تقدر تغيّره
+            priDate.value = iso;
+            priColor.value = "#35c6ff";
+            priTitle.value = "";
+            priNote.value = "";
+            openModal(myBack);
+            priTitle.focus();
+          } else {
+            priDate.value = iso;
+            priColor.value = "#35c6ff";
+            priTitle.value = "";
+            priNote.value = "";
+            openModal(myBack);
+            priTitle.focus();
+          }
+        };
+
+        table.appendChild(td);
+      });
+
+      card.appendChild(table);
+      weeksGrid.appendChild(card);
+    });
+  }
+
+  // أول تشغيل (قبل auth callback قد يتأخر)
+  render();
+</script>
+</body>
+</html>
