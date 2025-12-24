@@ -8,7 +8,6 @@
   <style>
     :root{
       --bg:#0b1020;
-      --card:#111a33;
       --text:#e8eeff;
       --muted:#a9b6e6;
       --line:rgba(255,255,255,.10);
@@ -114,7 +113,7 @@
       color:rgba(255,255,255,.9);background:rgba(0,0,0,.18);font-weight:900
     }
 
-    /* ===== Modal (Improved Admin UX) ===== */
+    /* ===== Modal ===== */
     .modalBack{
       position:fixed;inset:0;background:rgba(0,0,0,.55);
       display:none;align-items:center;justify-content:center;padding:16px;z-index:50;
@@ -132,7 +131,8 @@
     }
     .modalHead{
       display:flex;align-items:center;justify-content:space-between;gap:10px;
-      padding:12px 14px;border-bottom:1px solid var(--line);background:rgba(0,0,0,.22);
+      padding:12px 14px;border-bottom:1px solid var(--line);
+      background:rgba(0,0,0,.22);
       position:sticky;top:0;z-index:3;
     }
     .modalHead strong{font-size:14px}
@@ -161,6 +161,7 @@
     .small{font-size:12px;color:var(--muted)}
     .warn{border:1px solid rgba(255,92,122,.35);background:rgba(255,92,122,.10);padding:10px 12px;border-radius:14px}
 
+    /* Tabs */
     .tabs{
       display:flex;gap:10px;flex-wrap:wrap;
       border-bottom:1px solid var(--line);
@@ -183,6 +184,8 @@
       border-radius:14px;
       padding:12px;
     }
+
+    /* Weeks table */
     .weeksWrap{
       border:1px solid var(--line);
       border-radius:14px;
@@ -194,13 +197,18 @@
       padding:10px;border-bottom:1px solid var(--line);
       background:rgba(0,0,0,.16);
     }
+    .weeksScroll{
+      max-height: 55vh;
+      overflow:auto;
+      -webkit-overflow-scrolling: touch;
+    }
     .weeksTable{
       width:100%;
       border-collapse:separate;
       border-spacing:0;
       min-width:900px;
     }
-    .weeksTable th, .weeksTable td{
+    .weeksTable th,.weeksTable td{
       border-bottom:1px solid var(--line);
       padding:10px;
       font-size:12px;
@@ -214,18 +222,15 @@
       font-weight:900;
       position:sticky;top:0;z-index:2;
     }
-    .weeksScroll{
-      max-height: 55vh;
-      overflow:auto;
-      -webkit-overflow-scrolling: touch;
+    /* ✅ Ensure controls work */
+    .weeksScroll select,
+    .weeksScroll input,
+    .weeksScroll button{
+      pointer-events:auto;
     }
-    .miniBtn{
-      padding:8px 10px;border-radius:10px;font-size:12px;font-weight:900
-    }
-    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
 
-    .dangerTxt{color:rgba(255,92,122,.95)}
-    .okTxt{color:rgba(47,231,164,.95)}
+    .miniBtn{padding:8px 10px;border-radius:10px;font-size:12px;font-weight:900}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
 
     @media (max-width: 860px){
       .row{grid-template-columns:1fr}
@@ -292,15 +297,12 @@
     </div>
   </div>
 
-  <!-- Admin Modal (Beautiful + Tabs) -->
+  <!-- Admin Modal -->
   <div class="modalBack" id="adminBack">
     <div class="modal">
       <div class="modalHead">
         <strong>لوحة المدير</strong>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <span class="small">إضافة الأعضاء تتم من Firebase Console فقط</span>
-          <button id="closeAdmin">إغلاق</button>
-        </div>
+        <button id="closeAdmin">إغلاق</button>
       </div>
 
       <div class="modalBody">
@@ -309,7 +311,7 @@
           <button class="tabBtn" data-tab="tabWeeks">إدارة الأسابيع</button>
         </div>
 
-        <!-- Tab: Public Events -->
+        <!-- Public -->
         <div id="tabPublic" class="tabPane active">
           <div class="cardLite">
             <div style="font-weight:900;margin-bottom:8px">إضافة حدث عام (يظهر للجميع)</div>
@@ -335,23 +337,18 @@
             </div>
 
             <div class="small" style="margin-top:10px">
-              💡 نصيحة: يمكنك إضافة الأحداث العامة من هنا، وستظهر فورًا لكل المستخدمين.
+              💡 اضغط زر (إضافة الحدث العام) في الأسفل للحفظ.
             </div>
           </div>
         </div>
 
-        <!-- Tab: Weeks -->
+        <!-- Weeks -->
         <div id="tabWeeks" class="tabPane">
           <div class="cardLite">
-            <div style="display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap">
-              <div style="font-weight:900">إدارة الأسابيع</div>
-              <div class="small">
-                <span class="okTxt">week</span> = أسبوع دراسي | <span class="dangerTxt">vac</span> = إجازة
-              </div>
-            </div>
+            <div style="font-weight:900">إدارة الأسابيع</div>
             <div class="small" style="margin-top:8px">
-              - <b>startDateISO</b> هو تاريخ <b>الأحد</b> لبداية الأسبوع. <br>
-              - رتّب الأسابيع عبر <b>order</b> ثم اضغط <b>حفظ الأسابيع</b>.
+              - <b>startDateISO</b> تاريخ <b>الأحد</b> لبداية الأسبوع.<br>
+              - <b>type</b>: week أو vac (إجازة).
             </div>
           </div>
 
@@ -385,8 +382,15 @@
         </div>
       </div>
 
-      <div class="modalFoot">
-        <button id="addPublicEvent" class="primary">حفظ / إضافة الحدث العام</button>
+      <!-- ✅ Footer changes حسب التبويب -->
+      <div class="modalFoot" id="adminFoot">
+        <div id="footPublic" style="display:flex;gap:10px;flex-wrap:wrap">
+          <button id="addPublicEvent" class="primary">إضافة الحدث العام</button>
+        </div>
+
+        <div id="footWeeks" style="display:none;gap:10px;flex-wrap:wrap">
+          <button id="btnSaveWeeksFooter" class="primary">حفظ الأسابيع</button>
+        </div>
       </div>
     </div>
   </div>
@@ -420,9 +424,7 @@
           <textarea id="priNote" placeholder="تفاصيل..."></textarea>
         </div>
 
-        <div class="small">
-          💡 تلميح: تستطيع الضغط على أي يوم داخل التقويم لفتح إضافة حدث خاص بسرعة.
-        </div>
+        <div class="small">💡 تستطيع الضغط على أي يوم داخل التقويم لفتح إضافة حدث خاص بسرعة.</div>
       </div>
       <div class="modalFoot">
         <button id="addPrivateEvent" class="primary">إضافة الحدث الخاص</button>
@@ -442,8 +444,8 @@
     onSnapshot, query, orderBy, getDocs, writeBatch
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  /* ========= (1) ضع إعدادات Firebase هنا ========= */
-const firebaseConfig = {
+  /* ========= ضع إعدادات Firebase هنا ========= */
+ const firebaseConfig = {
   apiKey: "AIzaSyAulObTByvUjUgz_8QD3el0DRKacmbdH9Y",
   authDomain: "calendar-w-2fcbe.firebaseapp.com",
   projectId: "calendar-w-2fcbe",
@@ -453,7 +455,7 @@ const firebaseConfig = {
   measurementId: "G-MSBWPX2C75"
 };
 
-  /* ========= (2) بريد المدير ========= */
+  /* ========= بريد المدير ========= */
   const ADMIN_EMAILS = ["ensancom@gmail.com"];
   const ADMIN_EMAILS_NORM = ADMIN_EMAILS.map(e => (e||"").trim().toLowerCase());
 
@@ -509,7 +511,7 @@ const firebaseConfig = {
     : null;
   const fmtG = new Intl.DateTimeFormat("ar-SA", { year:"numeric", month:"2-digit", day:"2-digit" });
 
-  /* ========= Default fallback plan if publicWeeks empty ========= */
+  /* ========= Default fallback weeks ========= */
   function buildDefaultWeekPlan(){
     const plan = [];
     for(let w=16; w<=19; w++) plan.push({ type:"week", weekNumber:w, title:`الأسبوع ${w}` });
@@ -576,15 +578,22 @@ const firebaseConfig = {
   // Admin modal
   const adminBack = document.getElementById("adminBack");
   const closeAdmin = document.getElementById("closeAdmin");
+
   const pubDate = document.getElementById("pubDate");
   const pubColor = document.getElementById("pubColor");
   const pubTitle = document.getElementById("pubTitle");
   const pubNote = document.getElementById("pubNote");
   const addPublicEventBtn = document.getElementById("addPublicEvent");
+
   const weeksTbody = document.getElementById("weeksTbody");
   const btnAddWeek = document.getElementById("btnAddWeek");
   const btnAddVac = document.getElementById("btnAddVac");
   const btnSaveWeeks = document.getElementById("btnSaveWeeks");
+
+  // Footer switch
+  const footPublic = document.getElementById("footPublic");
+  const footWeeks  = document.getElementById("footWeeks");
+  const btnSaveWeeksFooter = document.getElementById("btnSaveWeeksFooter");
 
   // My modal
   const myBack = document.getElementById("myBack");
@@ -594,17 +603,6 @@ const firebaseConfig = {
   const priTitle = document.getElementById("priTitle");
   const priNote = document.getElementById("priNote");
   const addPrivateEventBtn = document.getElementById("addPrivateEvent");
-
-  /* ========= Tabs logic ========= */
-  const tabButtons = Array.from(document.querySelectorAll(".tabBtn"));
-  const tabPanes = Array.from(document.querySelectorAll(".tabPane"));
-  function setActiveTab(tabId){
-    tabButtons.forEach(b => b.classList.toggle("active", b.dataset.tab === tabId));
-    tabPanes.forEach(p => p.classList.toggle("active", p.id === tabId));
-  }
-  tabButtons.forEach(btn=>{
-    btn.addEventListener("click", ()=> setActiveTab(btn.dataset.tab));
-  });
 
   function openModal(el){ el.style.display = "flex"; }
   function closeModal(el){ el.style.display = "none"; }
@@ -619,12 +617,7 @@ const firebaseConfig = {
 
   btnAuth.onclick = ()=>openModal(authBack);
   btnLogout.onclick = async ()=>{ await signOut(auth); };
-  btnAdminPanel.onclick = ()=>{
-    if(!state.isAdmin) return;
-    setActiveTab("tabPublic");
-    renderWeeksEditor();
-    openModal(adminBack);
-  };
+
   btnMyPanel.onclick = ()=>{ if(state.user) openModal(myBack); };
 
   btnSignin.onclick = async ()=>{
@@ -662,6 +655,33 @@ const firebaseConfig = {
     btnAdminPanel.style.display = state.isAdmin ? "inline-block" : "none";
     btnMyPanel.style.display = state.user ? "inline-block" : "none";
   }
+
+  /* ========= Tabs logic (FIXED) ========= */
+  const tabButtons = Array.from(document.querySelectorAll(".tabBtn"));
+  const tabPanes = Array.from(document.querySelectorAll(".tabPane"));
+
+  function setActiveTab(tabId){
+    tabButtons.forEach(b => b.classList.toggle("active", b.dataset.tab === tabId));
+    tabPanes.forEach(p => p.classList.toggle("active", p.id === tabId));
+
+    const isWeeks = (tabId === "tabWeeks");
+    footPublic.style.display = isWeeks ? "none" : "flex";
+    footWeeks.style.display  = isWeeks ? "flex" : "none";
+
+    if(isWeeks) renderWeeksEditor();
+  }
+
+  tabButtons.forEach(btn=>{
+    btn.addEventListener("click", ()=> setActiveTab(btn.dataset.tab));
+  });
+
+  btnSaveWeeksFooter.onclick = () => btnSaveWeeks.click();
+
+  btnAdminPanel.onclick = ()=>{
+    if(!state.isAdmin) return;
+    openModal(adminBack);
+    setActiveTab("tabPublic");
+  };
 
   /* ========= Firestore listeners ========= */
   let unsubPublic = null;
@@ -793,13 +813,12 @@ const firebaseConfig = {
         <td><input class="mono" data-k="weekNumber" data-i="${idx}" type="number" min="0" value="${escapeHtml(w.weekNumber)}"></td>
         <td><input data-k="title" data-i="${idx}" type="text" value="${escapeHtml(w.title)}" placeholder="عنوان الأسبوع"></td>
         <td><input class="mono" data-k="startDateISO" data-i="${idx}" type="date" value="${escapeHtml(w.startDateISO)}"></td>
-        <td>
-          <button class="miniBtn danger" data-act="del" data-i="${idx}">حذف</button>
-        </td>
+        <td><button class="miniBtn danger" data-act="del" data-i="${idx}">حذف</button></td>
       `;
       weeksTbody.appendChild(tr);
     });
 
+    // inputs & selects
     weeksTbody.querySelectorAll("input,select").forEach(el=>{
       const apply = ()=>{
         const i = Number(el.getAttribute("data-i"));
@@ -809,7 +828,10 @@ const firebaseConfig = {
         let v = el.value;
         if(k === "order" || k === "weekNumber") v = Number(v || 0);
         weeksDraft[i][k] = v;
-        if(k === "type" && v === "vac") weeksDraft[i].weekNumber = 0;
+
+        if(k === "type" && v === "vac"){
+          weeksDraft[i].weekNumber = 0;
+        }
       };
       el.addEventListener("input", apply);
       el.addEventListener("change", ()=>{
@@ -818,6 +840,7 @@ const firebaseConfig = {
       });
     });
 
+    // delete
     weeksTbody.querySelectorAll('button[data-act="del"]').forEach(btn=>{
       btn.addEventListener("click", async ()=>{
         const i = Number(btn.getAttribute("data-i"));
