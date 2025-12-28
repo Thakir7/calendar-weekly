@@ -222,13 +222,8 @@
       font-weight:900;
       position:sticky;top:0;z-index:2;
     }
-    /* ✅ Ensure controls work */
-    .weeksScroll select,
-    .weeksScroll input,
-    .weeksScroll button{
-      pointer-events:auto;
-    }
-
+    /* ensure controls work */
+    .weeksScroll select,.weeksScroll input,.weeksScroll button{pointer-events:auto}
     .miniBtn{padding:8px 10px;border-radius:10px;font-size:12px;font-weight:900}
     .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
 
@@ -382,7 +377,7 @@
         </div>
       </div>
 
-      <!-- ✅ Footer changes حسب التبويب -->
+      <!-- Footer switch -->
       <div class="modalFoot" id="adminFoot">
         <div id="footPublic" style="display:flex;gap:10px;flex-wrap:wrap">
           <button id="addPublicEvent" class="primary">إضافة الحدث العام</button>
@@ -444,7 +439,7 @@
     onSnapshot, query, orderBy, getDocs, writeBatch
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  /* ========= ضع إعدادات Firebase هنا ========= */
+  /* ========= (1) ضع إعدادات Firebase هنا ========= */
   const firebaseConfig = {
     apiKey: "PUT_HERE",
     authDomain: "PUT_HERE",
@@ -454,7 +449,7 @@
     appId: "PUT_HERE"
   };
 
-  /* ========= بريد المدير ========= */
+  /* ========= (2) بريد المدير ========= */
   const ADMIN_EMAILS = ["ensancom@gmail.com"];
   const ADMIN_EMAILS_NORM = ADMIN_EMAILS.map(e => (e||"").trim().toLowerCase());
 
@@ -476,7 +471,8 @@
   function escapeHtml(str){
     return String(str || "")
       .replaceAll("&","&amp;").replaceAll("<","&lt;")
-      .replaceAll(">","&gt;").replaceAll('"',"&quot;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
       .replaceAll("'","&#039;");
   }
   function toISODate(d){
@@ -566,7 +562,6 @@
   const btnAdminPanel = document.getElementById("btnAdminPanel");
   const btnMyPanel = document.getElementById("btnMyPanel");
 
-  // Auth modal
   const authBack = document.getElementById("authBack");
   const closeAuth = document.getElementById("closeAuth");
   const authEmail = document.getElementById("authEmail");
@@ -574,7 +569,6 @@
   const btnSignin = document.getElementById("btnSignin");
   const btnForgot = document.getElementById("btnForgot");
 
-  // Admin modal
   const adminBack = document.getElementById("adminBack");
   const closeAdmin = document.getElementById("closeAdmin");
 
@@ -589,12 +583,10 @@
   const btnAddVac = document.getElementById("btnAddVac");
   const btnSaveWeeks = document.getElementById("btnSaveWeeks");
 
-  // Footer switch
   const footPublic = document.getElementById("footPublic");
   const footWeeks  = document.getElementById("footWeeks");
   const btnSaveWeeksFooter = document.getElementById("btnSaveWeeksFooter");
 
-  // My modal
   const myBack = document.getElementById("myBack");
   const closeMy = document.getElementById("closeMy");
   const priDate = document.getElementById("priDate");
@@ -616,7 +608,6 @@
 
   btnAuth.onclick = ()=>openModal(authBack);
   btnLogout.onclick = async ()=>{ await signOut(auth); };
-
   btnMyPanel.onclick = ()=>{ if(state.user) openModal(myBack); };
 
   btnSignin.onclick = async ()=>{
@@ -655,11 +646,14 @@
     btnMyPanel.style.display = state.user ? "inline-block" : "none";
   }
 
-  /* ========= Tabs logic (FIXED) ========= */
+  /* ========= Tabs logic + weeks edit lock ========= */
   const tabButtons = Array.from(document.querySelectorAll(".tabBtn"));
   const tabPanes = Array.from(document.querySelectorAll(".tabPane"));
+  let adminTab = "tabPublic";
+  let weeksDirty = false;
 
   function setActiveTab(tabId){
+    adminTab = tabId;
     tabButtons.forEach(b => b.classList.toggle("active", b.dataset.tab === tabId));
     tabPanes.forEach(p => p.classList.toggle("active", p.id === tabId));
 
@@ -667,14 +661,13 @@
     footPublic.style.display = isWeeks ? "none" : "flex";
     footWeeks.style.display  = isWeeks ? "flex" : "none";
 
-    if(isWeeks) renderWeeksEditor();
+    if(isWeeks){
+      weeksDirty = false; // فتح تبويب الأسابيع نسخة نظيفة
+      renderWeeksEditor();
+    }
   }
-
-  tabButtons.forEach(btn=>{
-    btn.addEventListener("click", ()=> setActiveTab(btn.dataset.tab));
-  });
-
-  btnSaveWeeksFooter.onclick = () => btnSaveWeeks.click();
+  tabButtons.forEach(btn=> btn.addEventListener("click", ()=> setActiveTab(btn.dataset.tab)));
+  btnSaveWeeksFooter.onclick = ()=> btnSaveWeeks.click();
 
   btnAdminPanel.onclick = ()=>{
     if(!state.isAdmin) return;
@@ -694,7 +687,6 @@
       render();
     });
   }
-
   function listenPrivateEvents(uid){
     const qy = query(collection(db, `users/${uid}/privateEvents`), orderBy("dateISO", "asc"));
     return onSnapshot(qy, (snap)=>{
@@ -702,13 +694,16 @@
       render();
     });
   }
-
   function listenWeeksPlan(){
     const qy = query(collection(db, "publicWeeks"), orderBy("order", "asc"));
     return onSnapshot(qy, (snap)=>{
       state.weeks = snap.docs.map(d => ({ id:d.id, ...d.data() }));
       render();
-      if(adminBack.style.display === "flex") renderWeeksEditor();
+
+      // ✅ لا نعيد بناء الجدول أثناء التعديل حتى لا تضيع تغييراتك
+      if(adminBack.style.display === "flex" && adminTab === "tabWeeks" && !weeksDirty){
+        renderWeeksEditor();
+      }
     });
   }
 
@@ -765,7 +760,7 @@
     }
   };
 
-  /* ========= Weeks Editor ========= */
+  /* ========= Weeks Editor (FIXED) ========= */
   let weeksDraft = [];
 
   function normalizeWeeksDraft(){
@@ -817,9 +812,11 @@
       weeksTbody.appendChild(tr);
     });
 
-    // inputs & selects
+    // Inputs & Selects
     weeksTbody.querySelectorAll("input,select").forEach(el=>{
       const apply = ()=>{
+        weeksDirty = true; // ✅ بدأ المستخدم بالتعديل
+
         const i = Number(el.getAttribute("data-i"));
         const k = el.getAttribute("data-k");
         if(Number.isNaN(i) || !k) return;
@@ -827,21 +824,52 @@
         let v = el.value;
         if(k === "order" || k === "weekNumber") v = Number(v || 0);
         weeksDraft[i][k] = v;
-
-        if(k === "type" && v === "vac"){
-          weeksDraft[i].weekNumber = 0;
-        }
       };
+
       el.addEventListener("input", apply);
+
       el.addEventListener("change", ()=>{
         apply();
-        if(el.getAttribute("data-k")==="type") renderWeeksEditor();
+
+        // ✅ FIX: لا نعيد رسم الجدول عند تغيير type
+        if(el.getAttribute("data-k")==="type"){
+          const i = Number(el.getAttribute("data-i"));
+          const row = el.closest("tr");
+          const weekNumInput = row.querySelector('input[data-k="weekNumber"]');
+
+          if(weeksDraft[i].type === "vac"){
+            weeksDraft[i].weekNumber = 0;
+            if(weekNumInput){
+              weekNumInput.value = "0";
+              weekNumInput.disabled = true;
+              weekNumInput.style.opacity = "0.6";
+            }
+          } else {
+            if(weekNumInput){
+              weekNumInput.disabled = false;
+              weekNumInput.style.opacity = "1";
+            }
+          }
+        }
       });
     });
 
-    // delete
+    // Apply vac UI on initial render
+    weeksTbody.querySelectorAll('select[data-k="type"]').forEach(sel=>{
+      const row = sel.closest("tr");
+      const i = Number(sel.getAttribute("data-i"));
+      const weekNumInput = row.querySelector('input[data-k="weekNumber"]');
+      if(weeksDraft[i]?.type === "vac" && weekNumInput){
+        weekNumInput.value = "0";
+        weekNumInput.disabled = true;
+        weekNumInput.style.opacity = "0.6";
+      }
+    });
+
+    // Delete
     weeksTbody.querySelectorAll('button[data-act="del"]').forEach(btn=>{
       btn.addEventListener("click", async ()=>{
+        weeksDirty = true;
         const i = Number(btn.getAttribute("data-i"));
         if(Number.isNaN(i)) return;
         const item = weeksDraft[i];
@@ -861,14 +889,18 @@
   }
 
   btnAddWeek.onclick = ()=>{
+    weeksDirty = true;
     const maxOrder = weeksDraft.reduce((m,w)=>Math.max(m, Number(w.order||0)), 0);
     weeksDraft.push({ id:null, order:maxOrder+1, type:"week", weekNumber:0, title:"أسبوع جديد", startDateISO:"" });
+    normalizeWeeksDraft();
     renderWeeksEditor();
   };
 
   btnAddVac.onclick = ()=>{
+    weeksDirty = true;
     const maxOrder = weeksDraft.reduce((m,w)=>Math.max(m, Number(w.order||0)), 0);
     weeksDraft.push({ id:null, order:maxOrder+1, type:"vac", weekNumber:0, title:"إجازة (أسبوع)", startDateISO:"" });
+    normalizeWeeksDraft();
     renderWeeksEditor();
   };
 
@@ -876,9 +908,11 @@
     if(!state.isAdmin) return;
 
     normalizeWeeksDraft();
+
     for(const w of weeksDraft){
       if(!w.startDateISO) return alert("يوجد أسبوع بدون تاريخ بداية (startDateISO).");
       if(w.type !== "vac" && (!w.title || w.title.trim()==="")) return alert("يوجد أسبوع بدون عنوان.");
+      if(w.type === "vac") w.weekNumber = 0;
     }
 
     try{
@@ -898,6 +932,7 @@
       });
 
       await batch.commit();
+      weeksDirty = false;
       alert("تم حفظ الأسابيع بنجاح.");
     }catch(err){
       alert(err?.message || "فشل حفظ الأسابيع.");
@@ -1010,12 +1045,18 @@
             </div>
             ${(ev.scope==="private" && state.user) || (ev.scope==="public" && state.isAdmin) ? `<div class="x" title="حذف">×</div>` : ""}
           `;
+
+          // ✅ FIX: لا تفتح نافذة إضافة حدث عند الضغط على الحدث/الحذف
+          item.addEventListener("click", (e)=> e.stopPropagation());
+
           const x = item.querySelector(".x");
           if(x){
-            x.onclick = ()=>{
+            x.addEventListener("click", (e)=>{
+              e.stopPropagation();
               if(confirm("حذف الحدث؟")) deleteEvent(ev);
-            };
+            });
           }
+
           evWrap.appendChild(item);
         });
 
@@ -1039,9 +1080,9 @@
     });
   }
 
+  // Start
   setRolePill();
   render();
 </script>
 </body>
 </html>
-
