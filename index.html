@@ -8,8 +8,6 @@
   <style>
     :root{
       --bg:#0f172a;
-      --card:#111c33;
-      --card2:#0b1224;
       --line:rgba(255,255,255,.10);
       --text:#e6eeff;
       --muted:#a7b4e6;
@@ -29,7 +27,6 @@
         var(--bg);
       color:var(--text);
     }
-    a{color:inherit}
     .wrap{max-width:1200px;margin:0 auto;padding:16px}
     .top{
       display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;
@@ -85,13 +82,7 @@
       font-size:12px;
     }
 
-    /* Panels */
-    .panels{
-      margin-top:14px;
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:12px;
-    }
+    .panels{margin-top:14px;display:grid;grid-template-columns:1fr;gap:12px}
     .panel{
       border:1px solid var(--line);
       border-radius:16px;
@@ -123,7 +114,6 @@
     textarea{min-height:88px;resize:vertical}
     .rowBtns{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
 
-    /* Calendar */
     .weeks{margin-top:14px;display:grid;gap:12px}
     .week{
       border:1px solid var(--line);
@@ -176,25 +166,18 @@
     .ev .tag{width:10px;height:10px;border-radius:3px;margin-top:3px;flex:0 0 auto}
     .ev .txt{flex:1}
     .ev .x{
-      cursor:pointer;
-      font-weight:900;
-      color:rgba(255,255,255,.75);
-      padding:0 6px;
-      border-radius:8px;
-      line-height:18px;
+      cursor:pointer;font-weight:900;color:rgba(255,255,255,.75);
+      padding:0 6px;border-radius:8px;line-height:18px;
     }
     .ev .x:hover{background:rgba(255,255,255,.08)}
     .badge{
-      display:inline-flex;
-      font-size:10px;font-weight:900;
+      display:inline-flex;font-size:10px;font-weight:900;
       padding:3px 7px;border-radius:999px;
       border:1px solid rgba(255,255,255,.18);
       background:rgba(0,0,0,.18);
-      margin-top:6px;
-      color:rgba(255,255,255,.9);
+      margin-top:6px;color:rgba(255,255,255,.9);
     }
 
-    /* Admin table */
     .scroll{overflow:auto;border:1px solid var(--line);border-radius:14px}
     table{border-collapse:separate;border-spacing:0;width:100%;min-width:900px}
     th,td{border-bottom:1px solid var(--line);padding:10px;font-size:12px;white-space:nowrap}
@@ -211,6 +194,7 @@
     }
   </style>
 </head>
+
 <body>
 <div class="wrap">
   <div class="top">
@@ -218,9 +202,10 @@
       <div class="logo"></div>
       <div>
         <h1>تقويم أسبوعي (احترافي وخفيف)</h1>
-        <div class="sub">أحداث عامة + خاصة | إدارة أسابيع | Firebase/Firestore</div>
+        <div class="sub">أحداث عامة + خاصة | إدارة أسابيع (مخفية) | Firebase/Firestore</div>
       </div>
     </div>
+
     <div class="actions">
       <span id="rolePill" class="pill"><span class="dot guest"></span><span>زائر</span></span>
       <button id="btnShowLogin" class="primary">دخول</button>
@@ -230,7 +215,7 @@
 
   <div id="demoNote" class="note" style="display:none;"></div>
 
-  <!-- Login panel (light) -->
+  <!-- Login panel -->
   <div class="panels" id="loginPanel" style="display:none;">
     <div class="panel">
       <div class="panelHead">
@@ -256,7 +241,7 @@
     </div>
   </div>
 
-  <!-- User actions panel -->
+  <!-- User panel -->
   <div class="panels" id="userPanel" style="display:none;">
     <div class="panel">
       <div class="panelHead">
@@ -294,14 +279,16 @@
     <div class="panel">
       <div class="panelHead">
         <strong>لوحة المدير</strong>
-        <span class="sub">إدارة الأحداث العامة + إدارة الأسابيع</span>
+        <span class="sub">الأدمن يتم تحديده من Firestore: admins/{uid}</span>
       </div>
       <div class="panelBody">
         <div class="warnBox" style="margin-bottom:10px">
-          ملاحظة للمدير: إنشاء الحسابات (الأعضاء) يتم من <b>Firebase Console → Authentication</b> (Add user).
+          ✅ لتفعيل الأدمن: أنشئ مستند في Firestore باسم <b>admins</b> ثم Document ID = <b>UID</b> للمدير.  
+          بعدها يظهر لك قسم الإدارة تلقائيًا.
         </div>
 
         <div class="grid2">
+          <!-- Public Events -->
           <div class="panel" style="border-radius:14px">
             <div class="panelHead"><strong>إضافة حدث عام</strong></div>
             <div class="panelBody">
@@ -329,41 +316,46 @@
             </div>
           </div>
 
+          <!-- Weeks Admin (Hidden) -->
           <div class="panel" style="border-radius:14px">
             <div class="panelHead">
               <strong>إدارة الأسابيع</strong>
-              <span class="sub">type=week/vac | startDateISO = تاريخ الأحد</span>
+              <span class="sub">مخفية — تظهر للمدير عند الحاجة</span>
             </div>
             <div class="panelBody">
-              <div class="rowBtns" style="justify-content:flex-start">
-                <button id="btnAddWeek" class="soft">+ إضافة أسبوع</button>
-                <button id="btnAddVac" class="soft">+ إضافة إجازة</button>
-                <button id="btnSaveWeeks" class="primary">حفظ الأسابيع</button>
-              </div>
+              <button id="btnToggleWeeks" class="soft">إظهار/إخفاء إدارة الأسابيع</button>
 
-              <div style="margin-top:10px" class="scroll">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>order</th>
-                      <th>type</th>
-                      <th>weekNumber</th>
-                      <th>title</th>
-                      <th>startDateISO (أحد)</th>
-                      <th>حذف</th>
-                    </tr>
-                  </thead>
-                  <tbody id="weeksTbody"></tbody>
-                </table>
-              </div>
+              <div id="weeksAdminBox" style="display:none; margin-top:12px;">
+                <div class="rowBtns" style="justify-content:flex-start">
+                  <button id="btnAddWeek" class="soft">+ إضافة أسبوع</button>
+                  <button id="btnAddVac" class="soft">+ إضافة إجازة</button>
+                  <button id="btnSaveWeeks" class="primary">حفظ الأسابيع</button>
+                </div>
 
-              <div class="note" style="margin-top:10px">
-                تلميح: بعد إضافة أسبوع/إجازة قم بتعبئة startDateISO ثم اضغط “حفظ الأسابيع”.
+                <div style="margin-top:10px" class="scroll">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>order</th>
+                        <th>type</th>
+                        <th>weekNumber</th>
+                        <th>title</th>
+                        <th>startDateISO (أحد)</th>
+                        <th>حذف</th>
+                      </tr>
+                    </thead>
+                    <tbody id="weeksTbody"></tbody>
+                  </table>
+                </div>
+
+                <div class="note" style="margin-top:10px">
+                  ملاحظة: <b>startDateISO</b> لازم يكون تاريخ <b>الأحد</b> لبداية الأسبوع.
+                </div>
               </div>
             </div>
           </div>
 
-        </div>
+        </div><!-- grid2 -->
       </div>
     </div>
   </div>
@@ -380,11 +372,11 @@
     sendPasswordResetEmail
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import {
-    getFirestore, collection, doc, addDoc, deleteDoc,
+    getFirestore, collection, doc, getDoc, addDoc, deleteDoc,
     onSnapshot, query, orderBy, getDocs, writeBatch
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  /* ====== ضع إعدادات Firebase هنا ====== */
+  /* ===== ضع إعدادات Firebase هنا ===== */
   const firebaseConfig = {
   apiKey: "AIzaSyAulObTByvUjUgz_8QD3el0DRKacmbdH9Y",
   authDomain: "calendar-w-2fcbe.firebaseapp.com",
@@ -395,11 +387,7 @@
   measurementId: "G-MSBWPX2C75"
   };
 
-  /* ====== بريد/إيميلات المدير ====== */
-  const ADMIN_EMAILS = ["ensancom@gmail.com"];
-  const ADMIN_EMAILS_NORM = ADMIN_EMAILS.map(e => (e||"").trim().toLowerCase());
-
-  /* ====== أدوات ====== */
+  /* ===== Helpers ===== */
   const days = [
     {name:"الأحد", off:false},
     {name:"الإثنين", off:false},
@@ -427,7 +415,7 @@
   }
   function parseISOToDate(iso){ return new Date((iso||"").trim()+"T00:00:00"); }
 
-  /* ====== التقويم الهجري أم القرى ====== */
+  /* ===== Umm al-Qura ===== */
   const hasUmalqura = (() => {
     try{
       const fmt = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura", { day:"numeric" });
@@ -439,7 +427,7 @@
     : null;
   const fmtG = new Intl.DateTimeFormat("ar-SA", { year:"numeric", month:"2-digit", day:"2-digit" });
 
-  /* ====== خطة أسابيع افتراضية ====== */
+  /* ===== Default weeks plan ===== */
   function buildDefaultWeekPlan(){
     const plan=[];
     for(let w=16; w<=19; w++) plan.push({ type:"week", weekNumber:w, title:`الأسبوع ${w}` });
@@ -448,13 +436,7 @@
     return plan;
   }
   const basePlan = buildDefaultWeekPlan();
-
-  function findGregorianForHijriFallback(){
-    if(!hasUmalqura) return startOfWeekSunday(new Date());
-    // تقريب بحث (كافي للعرض) — إذا تبغى دقة 100% نعتمد startDateISO من Firestore
-    return startOfWeekSunday(new Date());
-  }
-  const fallbackStartSunday = findGregorianForHijriFallback();
+  const fallbackStartSunday = startOfWeekSunday(new Date());
 
   function defaultWeeksFromFallback(){
     return basePlan.map((w,i)=>({
@@ -467,17 +449,18 @@
     }));
   }
 
-  /* ====== عناصر الصفحة ====== */
+  /* ===== UI Elements ===== */
   const rolePill = document.getElementById("rolePill");
   const demoNote = document.getElementById("demoNote");
   const weeksGrid = document.getElementById("weeksGrid");
 
   const loginPanel = document.getElementById("loginPanel");
-  const userPanel = document.getElementById("userPanel");
+  const userPanel  = document.getElementById("userPanel");
   const adminPanel = document.getElementById("adminPanel");
 
   const btnShowLogin = document.getElementById("btnShowLogin");
-  const btnLogout = document.getElementById("btnLogout");
+  const btnLogout    = document.getElementById("btnLogout");
+
   const loginEmail = document.getElementById("loginEmail");
   const loginPass  = document.getElementById("loginPass");
   const btnLogin   = document.getElementById("btnLogin");
@@ -495,12 +478,15 @@
   const pubNote = document.getElementById("pubNote");
   const btnAddPublic = document.getElementById("btnAddPublic");
 
+  const btnToggleWeeks = document.getElementById("btnToggleWeeks");
+  const weeksAdminBox  = document.getElementById("weeksAdminBox");
+
   const btnAddWeek = document.getElementById("btnAddWeek");
   const btnAddVac  = document.getElementById("btnAddVac");
   const btnSaveWeeks = document.getElementById("btnSaveWeeks");
   const weeksTbody = document.getElementById("weeksTbody");
 
-  /* ====== حالة التطبيق ====== */
+  /* ===== App state ===== */
   const state = {
     user:null,
     isAdmin:false,
@@ -518,7 +504,6 @@
     }else{
       rolePill.innerHTML = `<span class="dot guest"></span><span>زائر</span>`;
     }
-
     btnShowLogin.style.display = state.user ? "none" : "inline-block";
     btnLogout.style.display    = state.user ? "inline-block" : "none";
 
@@ -527,7 +512,7 @@
     adminPanel.style.display = (state.isAdmin) ? "block" : "none";
   }
 
-  /* ====== Firebase init (لا يطيّر الصفحة) ====== */
+  /* ===== Firebase init (safe) ===== */
   let app=null, auth=null, db=null;
   try{
     app = initializeApp(firebaseConfig);
@@ -537,11 +522,24 @@
   }catch(e){
     state.firebaseReady = false;
     demoNote.style.display = "block";
-    demoNote.innerHTML = `⚠️ <b>Demo Mode:</b> بيانات Firebase غير صحيحة أو غير مكتملة. سيتم عرض التقويم بدون تسجيل دخول/حفظ.`;
+    demoNote.innerHTML = `⚠️ <b>Demo Mode:</b> بيانات Firebase غير صحيحة أو ناقصة. سيتم عرض التقويم بدون تسجيل دخول/حفظ.`;
   }
 
-  /* ====== Auth actions ====== */
-  btnShowLogin.onclick = ()=>{ loginPanel.style.display = "block"; window.scrollTo({top:0, behavior:"smooth"}); };
+  /* ===== Admin check via Firestore: admins/{uid} ===== */
+  async function checkIsAdmin(uid){
+    try{
+      const snap = await getDoc(doc(db, "admins", uid));
+      return snap.exists();
+    }catch(e){
+      return false;
+    }
+  }
+
+  /* ===== Auth actions ===== */
+  btnShowLogin.onclick = ()=>{
+    loginPanel.style.display = "block";
+    window.scrollTo({top:0, behavior:"smooth"});
+  };
   btnLogout.onclick = async ()=>{ if(auth) await signOut(auth); };
 
   btnLogin.onclick = async ()=>{
@@ -557,7 +555,7 @@
   };
 
   btnForgot.onclick = async ()=>{
-    if(!state.firebaseReady) return alert("Firebase غير جاهز. ضع firebaseConfig الصحيح أولاً.");
+    if(!state.firebaseReady) return alert("Firebase غير جاهز.");
     const email = loginEmail.value.trim();
     if(!email) return alert("اكتب بريدك الإلكتروني أولاً.");
     try{
@@ -568,7 +566,16 @@
     }
   };
 
-  /* ====== Firestore listeners ====== */
+  btnToggleWeeks?.addEventListener("click", ()=>{
+    if(!state.isAdmin){
+      alert("هذه الميزة للمدير فقط.");
+      return;
+    }
+    const isOpen = weeksAdminBox.style.display !== "none";
+    weeksAdminBox.style.display = isOpen ? "none" : "block";
+  });
+
+  /* ===== Firestore listeners ===== */
   let unsubPublic=null, unsubPrivate=null, unsubWeeks=null;
 
   function listenPublicEvents(){
@@ -589,14 +596,13 @@
     const qy = query(collection(db,"publicWeeks"), orderBy("order","asc"));
     return onSnapshot(qy, (snap)=>{
       state.weeks = snap.docs.map(d=>({id:d.id, ...d.data()}));
-      // تحديث جدول الإدارة فقط إذا المدير فاتح (بدون قفل هنا — التصميم خفيف)
       loadWeeksDraftFromState();
       renderWeeksTable();
       renderCalendar();
     });
   }
 
-  /* ====== Weeks editor (خفيف وثابت) ====== */
+  /* ===== Weeks editor ===== */
   let weeksDraft = [];
   function normalizeWeeksDraft(){
     weeksDraft = weeksDraft.map(w=>({
@@ -644,7 +650,7 @@
       weeksTbody.appendChild(tr);
     });
 
-    // تعطيل weekNumber إذا vac
+    // disable weekNumber if vac
     weeksTbody.querySelectorAll('select[data-k="type"]').forEach(sel=>{
       const i = Number(sel.dataset.i);
       const row = sel.closest("tr");
@@ -653,11 +659,13 @@
         weekNum.value="0";
         weekNum.disabled=true;
         weekNum.style.opacity="0.6";
+      }else if(weekNum){
+        weekNum.disabled=false;
+        weekNum.style.opacity="1";
       }
     });
   }
 
-  // Event delegation للجدول (تعديل/حذف)
   document.addEventListener("input", (e)=>{
     const el = e.target;
     if(!el || !el.closest("#weeksTbody")) return;
@@ -676,12 +684,12 @@
     const k = el.dataset.k;
     if(Number.isNaN(i) || !k) return;
 
-    let v = el.value;
     if(k==="type"){
-      weeksDraft[i].type = (v==="vac"?"vac":"week");
+      weeksDraft[i].type = (el.value==="vac"?"vac":"week");
       if(weeksDraft[i].type==="vac") weeksDraft[i].weekNumber = 0;
       renderWeeksTable();
     }else{
+      let v = el.value;
       if(k==="order" || k==="weekNumber") v = Number(v||0);
       weeksDraft[i][k] = v;
     }
@@ -708,8 +716,8 @@
     }
   });
 
-  // أزرار إضافة أسبوع/إجازة (تعمل دائمًا)
   btnAddWeek?.addEventListener("click", ()=>{
+    if(!state.isAdmin) return alert("للمدير فقط.");
     const maxOrder = weeksDraft.reduce((m,w)=>Math.max(m, Number(w.order||0)),0);
     weeksDraft.push({id:null,order:maxOrder+1,type:"week",weekNumber:0,title:"أسبوع جديد",startDateISO:""});
     normalizeWeeksDraft();
@@ -717,6 +725,7 @@
   });
 
   btnAddVac?.addEventListener("click", ()=>{
+    if(!state.isAdmin) return alert("للمدير فقط.");
     const maxOrder = weeksDraft.reduce((m,w)=>Math.max(m, Number(w.order||0)),0);
     weeksDraft.push({id:null,order:maxOrder+1,type:"vac",weekNumber:0,title:"إجازة (أسبوع)",startDateISO:""});
     normalizeWeeksDraft();
@@ -757,8 +766,8 @@
     }
   });
 
-  /* ====== إضافة أحداث ====== */
-  async function addPublic(){
+  /* ===== Events ===== */
+  btnAddPublic?.addEventListener("click", async ()=>{
     if(!state.firebaseReady) return alert("Firebase غير جاهز.");
     if(!state.isAdmin) return alert("للمدير فقط.");
 
@@ -769,15 +778,16 @@
     if(!dateISO) return alert("اختر التاريخ.");
     if(!title) return alert("اكتب العنوان.");
 
-    await addDoc(collection(db,"publicEvents"), {dateISO,title,note,color,createdAt:Date.now()});
-    pubTitle.value=""; pubNote.value="";
-  }
-  btnAddPublic?.addEventListener("click", async ()=>{
-    try{ await addPublic(); alert("تمت إضافة حدث عام."); }
-    catch(err){ alert(err?.message || "فشل إضافة الحدث العام."); }
+    try{
+      await addDoc(collection(db,"publicEvents"), {dateISO,title,note,color,createdAt:Date.now()});
+      pubTitle.value=""; pubNote.value="";
+      alert("تمت إضافة حدث عام.");
+    }catch(err){
+      alert(err?.message || "فشل إضافة الحدث العام.");
+    }
   });
 
-  async function addPrivate(){
+  btnAddPrivate?.addEventListener("click", async ()=>{
     if(!state.firebaseReady) return alert("Firebase غير جاهز.");
     if(!state.user) return alert("سجل الدخول أولاً.");
 
@@ -788,12 +798,13 @@
     if(!dateISO) return alert("اختر التاريخ.");
     if(!title) return alert("اكتب العنوان.");
 
-    await addDoc(collection(db,`users/${state.user.uid}/privateEvents`), {dateISO,title,note,color,createdAt:Date.now()});
-    priTitle.value=""; priNote.value="";
-  }
-  btnAddPrivate?.addEventListener("click", async ()=>{
-    try{ await addPrivate(); alert("تمت إضافة حدث خاص."); }
-    catch(err){ alert(err?.message || "فشل إضافة الحدث الخاص."); }
+    try{
+      await addDoc(collection(db,`users/${state.user.uid}/privateEvents`), {dateISO,title,note,color,createdAt:Date.now()});
+      priTitle.value=""; priNote.value="";
+      alert("تمت إضافة حدث خاص.");
+    }catch(err){
+      alert(err?.message || "فشل إضافة الحدث الخاص.");
+    }
   });
 
   async function deleteEvent(ev){
@@ -811,9 +822,12 @@
     }
   }
 
-  /* ====== Render calendar ====== */
+  /* ===== Render calendar ===== */
   function renderCalendar(){
-    const plan = (state.weeks && state.weeks.length) ? state.weeks.slice().sort((a,b)=>Number(a.order)-Number(b.order)) : defaultWeeksFromFallback();
+    const plan = (state.weeks && state.weeks.length)
+      ? state.weeks.slice().sort((a,b)=>Number(a.order)-Number(b.order))
+      : defaultWeeksFromFallback();
+
     const events = [...state.publicEvents, ...(state.user ? state.privateEvents : [])];
     const todayISO = toISODate(new Date());
 
@@ -832,7 +846,9 @@
 
       const rangeG = `${fmtG.format(weekStart)} — ${fmtG.format(weekEnd)}`;
       const rangeH = hasUmalqura ? `${fmtHijri.format(weekStart)} — ${fmtHijri.format(weekEnd)}` : "";
-      const labelWeek = (w.type==="week" && Number(w.weekNumber||0) > 0) ? `الأسبوع الدراسي: ${Number(w.weekNumber)}` : (w.type==="vac"?"إجازة":"");
+      const labelWeek = (w.type==="week" && Number(w.weekNumber||0) > 0)
+        ? `الأسبوع الدراسي: ${Number(w.weekNumber)}`
+        : (w.type==="vac" ? "إجازة" : "");
 
       card.innerHTML = `
         <div class="weekHead">
@@ -841,12 +857,11 @@
             <span>(${escapeHtml(rangeG)}${hasUmalqura ? " | "+escapeHtml(rangeH) : ""}${labelWeek ? " — "+escapeHtml(labelWeek) : ""})</span>
           </div>
         </div>
-        <div class="table" data-weekstart="${escapeHtml(w.startDateISO)}"></div>
+        <div class="table"></div>
       `;
 
       const table = card.querySelector(".table");
 
-      // Header
       days.forEach(d=>{
         const th = document.createElement("div");
         th.className = "th" + (d.off ? " friSat" : "");
@@ -854,12 +869,13 @@
         table.appendChild(th);
       });
 
-      // Cells
       days.forEach((d,di)=>{
         const date = addDays(weekStart, di);
         const iso = toISODate(date);
+
         const td = document.createElement("div");
         td.className = "td" + (d.off ? " friSat" : "");
+
         const hTxt = hasUmalqura ? fmtHijri.format(date) : "—";
         td.innerHTML = `<div class="gDate">${escapeHtml(fmtG.format(date))}</div><div class="hDate">${escapeHtml(hTxt)}</div>`;
 
@@ -898,7 +914,6 @@
 
         td.appendChild(wrap);
 
-        // click day to fill private date
         td.style.cursor = state.user ? "pointer" : "default";
         td.addEventListener("click", ()=>{
           if(!state.user) return;
@@ -913,32 +928,43 @@
     });
   }
 
-  /* ====== تشغيل ابتدائي ====== */
+  /* ===== Boot (works even without Firebase) ===== */
   loadWeeksDraftFromState();
   renderWeeksTable();
   renderCalendar();
   setRolePill();
 
-  /* ====== تشغيل Firebase إذا جاهز ====== */
+  /* ===== Live Firebase ===== */
   if(state.firebaseReady){
-    onAuthStateChanged(auth, (user)=>{
+    onAuthStateChanged(auth, async (user)=>{
       state.user = user;
-      const email = (user?.email||"").trim().toLowerCase();
-      state.isAdmin = !!user && ADMIN_EMAILS_NORM.includes(email);
 
+      // stop old listeners
       if(unsubPublic) unsubPublic();
       if(unsubPrivate) unsubPrivate();
       if(unsubWeeks) unsubWeeks();
+      unsubPublic = unsubPrivate = unsubWeeks = null;
 
+      if(user){
+        // ✅ admin via Firestore admins/{uid}
+        state.isAdmin = await checkIsAdmin(user.uid);
+      }else{
+        state.isAdmin = false;
+      }
+
+      // start listeners
       unsubWeeks = listenWeeks();
       unsubPublic = listenPublicEvents();
       unsubPrivate = user ? listenPrivateEvents(user.uid) : null;
+
+      // close weeks box if not admin
+      if(!state.isAdmin) weeksAdminBox.style.display = "none";
 
       setRolePill();
       renderCalendar();
     });
 
-    // listeners for guests too
+    // guests also see public data
     unsubWeeks = listenWeeks();
     unsubPublic = listenPublicEvents();
   }
