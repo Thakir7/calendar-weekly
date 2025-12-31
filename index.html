@@ -116,7 +116,7 @@
     /* ===== Modal ===== */
     .modalBack{
       position:fixed;inset:0;background:rgba(0,0,0,.55);
-      display:none;align-items:center;justify-content:center;padding:16px;z-index:50;
+      display:none;align-items:center;justify-content:center;padding:16px;z-index:9999;
     }
     .modal{
       width:min(1020px, 100%);
@@ -128,6 +128,7 @@
       overflow:hidden;
       display:flex;
       flex-direction:column;
+      z-index:10000;
     }
     .modalHead{
       display:flex;align-items:center;justify-content:space-between;gap:10px;
@@ -142,6 +143,8 @@
       -webkit-overflow-scrolling: touch;
       display:grid;
       gap:12px;
+      position:relative;
+      z-index:4;
     }
     .modalFoot{
       padding:12px 14px;border-top:1px solid var(--line);
@@ -191,6 +194,8 @@
       border-radius:14px;
       overflow:hidden;
       background:rgba(255,255,255,.03);
+      position:relative;
+      z-index:10001;
     }
     .weeksToolbar{
       display:flex;gap:8px;justify-content:space-between;align-items:center;flex-wrap:wrap;
@@ -222,9 +227,13 @@
       font-weight:900;
       position:sticky;top:0;z-index:2;
     }
-    .weeksScroll select,.weeksScroll input,.weeksScroll button{pointer-events:auto}
     .miniBtn{padding:8px 10px;border-radius:10px;font-size:12px;font-weight:900}
     .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+
+    /* ✅ إصلاح نهائي للنقر على أزرار إدارة الأسابيع */
+    .weeksWrap, .weeksToolbar, .weeksToolbar *{
+      pointer-events: auto !important;
+    }
 
     @media (max-width: 860px){
       .row{grid-template-columns:1fr}
@@ -440,7 +449,7 @@
 
   /* ========= ضع إعدادات Firebase هنا ========= */
   const firebaseConfig = {
-    apiKey: "AIzaSyAulObTByvUjUgz_8QD3el0DRKacmbdH9Y",
+  apiKey: "AIzaSyAulObTByvUjUgz_8QD3el0DRKacmbdH9Y",
   authDomain: "calendar-w-2fcbe.firebaseapp.com",
   projectId: "calendar-w-2fcbe",
   storageBucket: "calendar-w-2fcbe.firebasestorage.app",
@@ -578,8 +587,6 @@
   const addPublicEventBtn = document.getElementById("addPublicEvent");
 
   const weeksTbody = document.getElementById("weeksTbody");
-  const btnAddWeek = document.getElementById("btnAddWeek");
-  const btnAddVac = document.getElementById("btnAddVac");
   const btnSaveWeeks = document.getElementById("btnSaveWeeks");
 
   const footPublic = document.getElementById("footPublic");
@@ -662,7 +669,7 @@
 
     if(isWeeks){
       weeksDirty = false;
-      renderWeeksEditor(true); // ✅ تحميل من state مرة واحدة
+      renderWeeksEditor(true);
     }
   }
   tabButtons.forEach(btn=> btn.addEventListener("click", ()=> setActiveTab(btn.dataset.tab)));
@@ -698,8 +705,6 @@
     return onSnapshot(qy, (snap)=>{
       state.weeks = snap.docs.map(d => ({ id:d.id, ...d.data() }));
       render();
-
-      // ✅ لا نعيد تحميل جدول الأسابيع أثناء التعديل
       if(adminBack.style.display === "flex" && adminTab === "tabWeeks" && !weeksDirty){
         renderWeeksEditor(true);
       }
@@ -759,7 +764,7 @@
     }
   };
 
-  /* ========= Weeks Editor (FINAL FIX) ========= */
+  /* ========= Weeks Editor (FINAL) ========= */
   let weeksDraft = [];
 
   function normalizeWeeksDraft(){
@@ -814,11 +819,9 @@
       weeksTbody.appendChild(tr);
     });
 
-    // Inputs & Selects
     weeksTbody.querySelectorAll("input,select").forEach(el=>{
       const apply = ()=>{
         weeksDirty = true;
-
         const i = Number(el.getAttribute("data-i"));
         const k = el.getAttribute("data-k");
         if(Number.isNaN(i) || !k) return;
@@ -833,7 +836,6 @@
       el.addEventListener("change", ()=>{
         apply();
 
-        // ✅ لا نعيد التحميل/إعادة البناء عند تغيير type
         if(el.getAttribute("data-k")==="type"){
           const i = Number(el.getAttribute("data-i"));
           const row = el.closest("tr");
@@ -856,7 +858,6 @@
       });
     });
 
-    // Apply vac UI on initial render
     weeksTbody.querySelectorAll('select[data-k="type"]').forEach(sel=>{
       const row = sel.closest("tr");
       const i = Number(sel.getAttribute("data-i"));
@@ -868,11 +869,9 @@
       }
     });
 
-    // Delete
     weeksTbody.querySelectorAll('button[data-act="del"]').forEach(btn=>{
       btn.addEventListener("click", async ()=>{
         weeksDirty = true;
-
         const i = Number(btn.getAttribute("data-i"));
         if(Number.isNaN(i)) return;
 
@@ -899,21 +898,39 @@
     renderWeeksTable();
   }
 
-  btnAddWeek.onclick = ()=>{
-    weeksDirty = true;
-    const maxOrder = weeksDraft.reduce((m,w)=>Math.max(m, Number(w.order||0)), 0);
-    weeksDraft.push({ id:null, order:maxOrder+1, type:"week", weekNumber:0, title:"أسبوع جديد", startDateISO:"" });
-    normalizeWeeksDraft();
-    renderWeeksEditor(false);
-  };
+  /* ✅ FIX النهائي: Event Delegation لأزرار إضافة أسبوع/إجازة */
+  document.addEventListener("click", (e) => {
+    const addWeekBtn = e.target.closest("#btnAddWeek");
+    const addVacBtn  = e.target.closest("#btnAddVac");
 
-  btnAddVac.onclick = ()=>{
-    weeksDirty = true;
-    const maxOrder = weeksDraft.reduce((m,w)=>Math.max(m, Number(w.order||0)), 0);
-    weeksDraft.push({ id:null, order:maxOrder+1, type:"vac", weekNumber:0, title:"إجازة (أسبوع)", startDateISO:"" });
-    normalizeWeeksDraft();
-    renderWeeksEditor(false);
-  };
+    if (addWeekBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      weeksDirty = true;
+
+      const maxOrder = weeksDraft.reduce((m,w)=>Math.max(m, Number(w.order||0)), 0);
+      weeksDraft.push({ id:null, order:maxOrder+1, type:"week", weekNumber:0, title:"أسبوع جديد", startDateISO:"" });
+      normalizeWeeksDraft();
+      renderWeeksEditor(false);
+
+      console.log("✅ Added week row", weeksDraft.length);
+      return;
+    }
+
+    if (addVacBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      weeksDirty = true;
+
+      const maxOrder = weeksDraft.reduce((m,w)=>Math.max(m, Number(w.order||0)), 0);
+      weeksDraft.push({ id:null, order:maxOrder+1, type:"vac", weekNumber:0, title:"إجازة (أسبوع)", startDateISO:"" });
+      normalizeWeeksDraft();
+      renderWeeksEditor(false);
+
+      console.log("✅ Added vac row", weeksDraft.length);
+      return;
+    }
+  }, true);
 
   btnSaveWeeks.onclick = async ()=>{
     if(!state.isAdmin) return;
@@ -967,6 +984,11 @@
     setRolePill();
     render();
   });
+
+  /* ========= Firestore listeners init ======== */
+  let unsubPublic=null, unsubPrivate=null, unsubWeeksPlan=null;
+  unsubWeeksPlan = listenWeeksPlan();
+  unsubPublic = listenPublicEvents();
 
   /* ========= Render calendar ========= */
   function render(){
@@ -1057,7 +1079,6 @@
             ${(ev.scope==="private" && state.user) || (ev.scope==="public" && state.isAdmin) ? `<div class="x" title="حذف">×</div>` : ""}
           `;
 
-          // ✅ FIX: لا تفتح نافذة إضافة حدث عند الضغط على الحدث/الحذف
           item.addEventListener("click", (e)=> e.stopPropagation());
 
           const x = item.querySelector(".x");
@@ -1067,7 +1088,6 @@
               if(confirm("حذف الحدث؟")) deleteEvent(ev);
             });
           }
-
           evWrap.appendChild(item);
         });
 
@@ -1097,5 +1117,3 @@
 </script>
 </body>
 </html>
-
-
