@@ -222,7 +222,6 @@
       font-weight:900;
       position:sticky;top:0;z-index:2;
     }
-    /* ensure controls work */
     .weeksScroll select,.weeksScroll input,.weeksScroll button{pointer-events:auto}
     .miniBtn{padding:8px 10px;border-radius:10px;font-size:12px;font-weight:900}
     .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
@@ -439,19 +438,18 @@
     onSnapshot, query, orderBy, getDocs, writeBatch
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  /* ========= (1) ضع إعدادات Firebase هنا ========= */
-const firebaseConfig = {
-  apiKey: "AIzaSyAulObTByvUjUgz_8QD3el0DRKacmbdH9Y",
-  authDomain: "calendar-w-2fcbe.firebaseapp.com",
-  projectId: "calendar-w-2fcbe",
-  storageBucket: "calendar-w-2fcbe.firebasestorage.app",
-  messagingSenderId: "544490738732",
-  appId: "1:544490738732:web:f1008e65eaa0c83b23ed89",
-  measurementId: "G-MSBWPX2C75"
-};
+  /* ========= ضع إعدادات Firebase هنا ========= */
+  const firebaseConfig = {
+    apiKey: "PUT_HERE",
+    authDomain: "PUT_HERE",
+    projectId: "PUT_HERE",
+    storageBucket: "PUT_HERE",
+    messagingSenderId: "PUT_HERE",
+    appId: "PUT_HERE"
+  };
 
-  /* ========= (2) بريد المدير ========= */
-  const ADMIN_EMAILS = ["ensancom@gmail.com"];
+  /* ========= بريد المدير ========= */
+  const ADMIN_EMAILS = ["ensancm@gmail.com"];
   const ADMIN_EMAILS_NORM = ADMIN_EMAILS.map(e => (e||"").trim().toLowerCase());
 
   const app = initializeApp(firebaseConfig);
@@ -472,8 +470,7 @@ const firebaseConfig = {
   function escapeHtml(str){
     return String(str || "")
       .replaceAll("&","&amp;").replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
+      .replaceAll(">","&gt;").replaceAll('"',"&quot;")
       .replaceAll("'","&#039;");
   }
   function toISODate(d){
@@ -663,8 +660,8 @@ const firebaseConfig = {
     footWeeks.style.display  = isWeeks ? "flex" : "none";
 
     if(isWeeks){
-      weeksDirty = false; // فتح تبويب الأسابيع نسخة نظيفة
-      renderWeeksEditor();
+      weeksDirty = false;
+      renderWeeksEditor(true); // ✅ تحميل من state مرة واحدة
     }
   }
   tabButtons.forEach(btn=> btn.addEventListener("click", ()=> setActiveTab(btn.dataset.tab)));
@@ -701,9 +698,9 @@ const firebaseConfig = {
       state.weeks = snap.docs.map(d => ({ id:d.id, ...d.data() }));
       render();
 
-      // ✅ لا نعيد بناء الجدول أثناء التعديل حتى لا تضيع تغييراتك
+      // ✅ لا نعيد تحميل جدول الأسابيع أثناء التعديل
       if(adminBack.style.display === "flex" && adminTab === "tabWeeks" && !weeksDirty){
-        renderWeeksEditor();
+        renderWeeksEditor(true);
       }
     });
   }
@@ -761,7 +758,7 @@ const firebaseConfig = {
     }
   };
 
-  /* ========= Weeks Editor (FIXED) ========= */
+  /* ========= Weeks Editor (FINAL FIX) ========= */
   let weeksDraft = [];
 
   function normalizeWeeksDraft(){
@@ -782,19 +779,22 @@ const firebaseConfig = {
     weeksDraft.sort((a,b)=>a.order-b.order);
   }
 
-  function renderWeeksEditor(){
+  function loadWeeksDraftFromState(){
     const src = (state.weeks && state.weeks.length) ? state.weeks : defaultWeeksFromFallback();
     weeksDraft = src.map(w => ({
       id: w.id || null,
-      order: w.order,
-      type: w.type || "week",
+      order: Number(w.order || 0),
+      type: (w.type === "vac" ? "vac" : "week"),
       weekNumber: Number(w.weekNumber || 0),
-      title: w.title || "",
-      startDateISO: w.startDateISO || ""
+      title: (w.title || ""),
+      startDateISO: (w.startDateISO || "")
     }));
     normalizeWeeksDraft();
+  }
 
+  function renderWeeksTable(){
     weeksTbody.innerHTML = "";
+
     weeksDraft.forEach((w, idx)=>{
       const tr = document.createElement("tr");
       tr.innerHTML = `
@@ -816,7 +816,7 @@ const firebaseConfig = {
     // Inputs & Selects
     weeksTbody.querySelectorAll("input,select").forEach(el=>{
       const apply = ()=>{
-        weeksDirty = true; // ✅ بدأ المستخدم بالتعديل
+        weeksDirty = true;
 
         const i = Number(el.getAttribute("data-i"));
         const k = el.getAttribute("data-k");
@@ -832,7 +832,7 @@ const firebaseConfig = {
       el.addEventListener("change", ()=>{
         apply();
 
-        // ✅ FIX: لا نعيد رسم الجدول عند تغيير type
+        // ✅ لا نعيد التحميل/إعادة البناء عند تغيير type
         if(el.getAttribute("data-k")==="type"){
           const i = Number(el.getAttribute("data-i"));
           const row = el.closest("tr");
@@ -871,16 +871,20 @@ const firebaseConfig = {
     weeksTbody.querySelectorAll('button[data-act="del"]').forEach(btn=>{
       btn.addEventListener("click", async ()=>{
         weeksDirty = true;
+
         const i = Number(btn.getAttribute("data-i"));
         if(Number.isNaN(i)) return;
+
         const item = weeksDraft[i];
         if(!confirm("حذف هذا الأسبوع؟")) return;
+
         try{
           if(item.id){
             await deleteDoc(doc(db, "publicWeeks", item.id));
           } else {
             weeksDraft.splice(i, 1);
-            renderWeeksEditor();
+            normalizeWeeksDraft();
+            renderWeeksTable();
           }
         }catch(err){
           alert(err?.message || "فشل حذف الأسبوع.");
@@ -889,12 +893,17 @@ const firebaseConfig = {
     });
   }
 
+  function renderWeeksEditor(initFromState=false){
+    if(initFromState) loadWeeksDraftFromState();
+    renderWeeksTable();
+  }
+
   btnAddWeek.onclick = ()=>{
     weeksDirty = true;
     const maxOrder = weeksDraft.reduce((m,w)=>Math.max(m, Number(w.order||0)), 0);
     weeksDraft.push({ id:null, order:maxOrder+1, type:"week", weekNumber:0, title:"أسبوع جديد", startDateISO:"" });
     normalizeWeeksDraft();
-    renderWeeksEditor();
+    renderWeeksEditor(false);
   };
 
   btnAddVac.onclick = ()=>{
@@ -902,7 +911,7 @@ const firebaseConfig = {
     const maxOrder = weeksDraft.reduce((m,w)=>Math.max(m, Number(w.order||0)), 0);
     weeksDraft.push({ id:null, order:maxOrder+1, type:"vac", weekNumber:0, title:"إجازة (أسبوع)", startDateISO:"" });
     normalizeWeeksDraft();
-    renderWeeksEditor();
+    renderWeeksEditor(false);
   };
 
   btnSaveWeeks.onclick = async ()=>{
@@ -1087,4 +1096,3 @@ const firebaseConfig = {
 </script>
 </body>
 </html>
-
