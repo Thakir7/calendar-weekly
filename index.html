@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>تقويم أسبوعي | Firebase</title>
+  <title>التقويم الدراسي الأسبوعي</title>
 
   <style>
     :root{
@@ -72,6 +72,7 @@
     button.primary{background:rgba(124,92,255,.25);border-color:rgba(124,92,255,.45)}
     button.danger{background:rgba(255,92,122,.16);border-color:rgba(255,92,122,.35)}
     button.soft{background:rgba(47,231,164,.10);border-color:rgba(47,231,164,.25)}
+
     .note{
       margin-top:12px;
       border:1px dashed rgba(255,255,255,.18);
@@ -94,9 +95,14 @@
       display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;
       background:rgba(0,0,0,.18);
       border-bottom:1px solid var(--line);
+      user-select:none;
     }
     .panelHead strong{font-size:13px}
     .panelBody{padding:12px 14px}
+
+    /* accordion head hover */
+    .accordionHead{cursor:pointer}
+    .accordionHead:hover{background:rgba(255,255,255,.06)}
 
     .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     @media (max-width:860px){ .grid2{grid-template-columns:1fr} }
@@ -192,6 +198,9 @@
       font-size:12px;
       color:rgba(255,255,255,.92);
     }
+
+    /* small arrow */
+    .chev{opacity:.9;font-weight:900}
   </style>
 </head>
 
@@ -201,8 +210,8 @@
     <div class="brand">
       <div class="logo"></div>
       <div>
-        <h1>تقويم أسبوعي (احترافي وخفيف)</h1>
-        <div class="sub">أحداث عامة + خاصة | إدارة أسابيع (مخفية) | Firebase/Firestore</div>
+        <h1>التقويم الدراسي الأسبوعي</h1>
+        <div class="sub">خفيف + احترافي | Firebase + Firestore</div>
       </div>
     </div>
 
@@ -261,7 +270,7 @@
         </div>
         <div style="margin-top:10px">
           <label>العنوان</label>
-          <input id="priTitle" type="text" placeholder="مثال: متابعة متدرب">
+          <input id="priTitle" type="text" placeholder="مثال: متابعة">
         </div>
         <div style="margin-top:10px">
           <label>ملاحظات (اختياري)</label>
@@ -279,19 +288,24 @@
     <div class="panel">
       <div class="panelHead">
         <strong>لوحة المدير</strong>
-        <span class="sub">الأدمن يتم تحديده من Firestore: admins/{uid}</span>
+        <span class="sub">الأدمن من Firestore: admins/{uid}</span>
       </div>
       <div class="panelBody">
         <div class="warnBox" style="margin-bottom:10px">
-          ✅ لتفعيل الأدمن: أنشئ مستند في Firestore باسم <b>admins</b> ثم Document ID = <b>UID</b> للمدير.  
-          بعدها يظهر لك قسم الإدارة تلقائيًا.
+          ✅ لتفعيل الأدمن: أنشئ وثيقة في Firestore داخل <b>admins</b> و Document ID = <b>UID</b> للمدير.
         </div>
 
         <div class="grid2">
-          <!-- Public Events -->
+
+          <!-- Public events accordion -->
           <div class="panel" style="border-radius:14px">
-            <div class="panelHead"><strong>إضافة حدث عام</strong></div>
-            <div class="panelBody">
+            <div id="publicHead" class="panelHead accordionHead">
+              <strong>الأحداث العامة</strong>
+              <span class="sub">اضغط لفتح/إغلاق نموذج الإضافة</span>
+              <span class="chev" id="publicChev">▾</span>
+            </div>
+
+            <div id="publicEventBox" class="panelBody" style="display:none;">
               <div class="grid2">
                 <div>
                   <label>التاريخ</label>
@@ -302,55 +316,56 @@
                   <input id="pubColor" type="color" value="#7c5cff">
                 </div>
               </div>
+
               <div style="margin-top:10px">
                 <label>العنوان</label>
                 <input id="pubTitle" type="text" placeholder="مثال: بداية الاختبارات">
               </div>
+
               <div style="margin-top:10px">
                 <label>ملاحظات (اختياري)</label>
                 <textarea id="pubNote" placeholder="تفاصيل..."></textarea>
               </div>
+
               <div style="margin-top:10px" class="rowBtns">
                 <button id="btnAddPublic" class="primary">إضافة الحدث العام</button>
               </div>
             </div>
           </div>
 
-          <!-- Weeks Admin (Hidden) -->
+          <!-- Weeks admin accordion -->
           <div class="panel" style="border-radius:14px">
-            <div class="panelHead">
+            <div id="weeksHead" class="panelHead accordionHead">
               <strong>إدارة الأسابيع</strong>
-              <span class="sub">مخفية — تظهر للمدير عند الحاجة</span>
+              <span class="sub">اضغط لفتح/إغلاق</span>
+              <span class="chev" id="weeksChev">▾</span>
             </div>
-            <div class="panelBody">
-              <button id="btnToggleWeeks" class="soft">إظهار/إخفاء إدارة الأسابيع</button>
 
-              <div id="weeksAdminBox" style="display:none; margin-top:12px;">
-                <div class="rowBtns" style="justify-content:flex-start">
-                  <button id="btnAddWeek" class="soft">+ إضافة أسبوع</button>
-                  <button id="btnAddVac" class="soft">+ إضافة إجازة</button>
-                  <button id="btnSaveWeeks" class="primary">حفظ الأسابيع</button>
-                </div>
+            <div id="weeksAdminBox" class="panelBody" style="display:none;">
+              <div class="rowBtns" style="justify-content:flex-start">
+                <button id="btnAddWeek" class="soft">+ إضافة أسبوع</button>
+                <button id="btnAddVac" class="soft">+ إضافة إجازة</button>
+                <button id="btnSaveWeeks" class="primary">حفظ الأسابيع</button>
+              </div>
 
-                <div style="margin-top:10px" class="scroll">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>order</th>
-                        <th>type</th>
-                        <th>weekNumber</th>
-                        <th>title</th>
-                        <th>startDateISO (أحد)</th>
-                        <th>حذف</th>
-                      </tr>
-                    </thead>
-                    <tbody id="weeksTbody"></tbody>
-                  </table>
-                </div>
+              <div style="margin-top:10px" class="scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>order</th>
+                      <th>type</th>
+                      <th>weekNumber</th>
+                      <th>title</th>
+                      <th>startDateISO (أحد)</th>
+                      <th>حذف</th>
+                    </tr>
+                  </thead>
+                  <tbody id="weeksTbody"></tbody>
+                </table>
+              </div>
 
-                <div class="note" style="margin-top:10px">
-                  ملاحظة: <b>startDateISO</b> لازم يكون تاريخ <b>الأحد</b> لبداية الأسبوع.
-                </div>
+              <div class="note" style="margin-top:10px">
+                ملاحظة: <b>startDateISO</b> لازم يكون تاريخ <b>الأحد</b> لبداية الأسبوع.
               </div>
             </div>
           </div>
@@ -400,7 +415,8 @@
   function escapeHtml(str){
     return String(str||"")
       .replaceAll("&","&amp;").replaceAll("<","&lt;")
-      .replaceAll(">","&gt;").replaceAll('"',"&quot;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
       .replaceAll("'","&#039;");
   }
   function toISODate(d){
@@ -437,7 +453,6 @@
   }
   const basePlan = buildDefaultWeekPlan();
   const fallbackStartSunday = startOfWeekSunday(new Date());
-
   function defaultWeeksFromFallback(){
     return basePlan.map((w,i)=>({
       id:null,
@@ -478,8 +493,13 @@
   const pubNote = document.getElementById("pubNote");
   const btnAddPublic = document.getElementById("btnAddPublic");
 
-  const btnToggleWeeks = document.getElementById("btnToggleWeeks");
+  const publicHead = document.getElementById("publicHead");
+  const publicEventBox = document.getElementById("publicEventBox");
+  const publicChev = document.getElementById("publicChev");
+
+  const weeksHead = document.getElementById("weeksHead");
   const weeksAdminBox  = document.getElementById("weeksAdminBox");
+  const weeksChev = document.getElementById("weeksChev");
 
   const btnAddWeek = document.getElementById("btnAddWeek");
   const btnAddVac  = document.getElementById("btnAddVac");
@@ -512,6 +532,12 @@
     adminPanel.style.display = (state.isAdmin) ? "block" : "none";
   }
 
+  function toggleBox(box, chev){
+    const open = box.style.display !== "none";
+    box.style.display = open ? "none" : "block";
+    if(chev) chev.textContent = open ? "▾" : "▴";
+  }
+
   /* ===== Firebase init (safe) ===== */
   let app=null, auth=null, db=null;
   try{
@@ -534,6 +560,16 @@
       return false;
     }
   }
+
+  /* ===== Accordion clicks (head) ===== */
+  publicHead?.addEventListener("click", ()=>{
+    if(!state.isAdmin) return alert("هذه الميزة للمدير فقط.");
+    toggleBox(publicEventBox, publicChev);
+  });
+  weeksHead?.addEventListener("click", ()=>{
+    if(!state.isAdmin) return alert("هذه الميزة للمدير فقط.");
+    toggleBox(weeksAdminBox, weeksChev);
+  });
 
   /* ===== Auth actions ===== */
   btnShowLogin.onclick = ()=>{
@@ -565,15 +601,6 @@
       alert(err?.message || "تعذر إرسال رابط إعادة التعيين.");
     }
   };
-
-  btnToggleWeeks?.addEventListener("click", ()=>{
-    if(!state.isAdmin){
-      alert("هذه الميزة للمدير فقط.");
-      return;
-    }
-    const isOpen = weeksAdminBox.style.display !== "none";
-    weeksAdminBox.style.display = isOpen ? "none" : "block";
-  });
 
   /* ===== Firestore listeners ===== */
   let unsubPublic=null, unsubPrivate=null, unsubWeeks=null;
@@ -650,7 +677,6 @@
       weeksTbody.appendChild(tr);
     });
 
-    // disable weekNumber if vac
     weeksTbody.querySelectorAll('select[data-k="type"]').forEach(sel=>{
       const i = Number(sel.dataset.i);
       const row = sel.closest("tr");
@@ -929,6 +955,168 @@
   }
 
   /* ===== Boot (works even without Firebase) ===== */
+  let weeksDraft = [];
+  function normalizeWeeksDraft(){
+    weeksDraft = weeksDraft.map(w=>({
+      id: w.id || null,
+      order: Number(w.order||0),
+      type: (w.type==="vac"?"vac":"week"),
+      weekNumber: Number(w.weekNumber||0),
+      title: (w.title||"").trim(),
+      startDateISO: (w.startDateISO||"").trim()
+    })).sort((a,b)=>a.order-b.order);
+
+    weeksDraft.forEach((w,i)=>{ if(!w.order || w.order<1) w.order=i+1; });
+    weeksDraft.sort((a,b)=>a.order-b.order);
+  }
+  function loadWeeksDraftFromState(){
+    const src = (state.weeks && state.weeks.length) ? state.weeks : defaultWeeksFromFallback();
+    weeksDraft = src.map(w=>({
+      id:w.id||null,
+      order:Number(w.order||0),
+      type:(w.type==="vac"?"vac":"week"),
+      weekNumber:Number(w.weekNumber||0),
+      title:w.title||"",
+      startDateISO:w.startDateISO||""
+    }));
+    normalizeWeeksDraft();
+  }
+  function renderWeeksTable(){
+    if(!weeksTbody) return;
+    weeksTbody.innerHTML = "";
+    weeksDraft.forEach((w,idx)=>{
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><input class="mono" data-k="order" data-i="${idx}" type="number" min="1" value="${escapeHtml(w.order)}"></td>
+        <td>
+          <select data-k="type" data-i="${idx}">
+            <option value="week" ${w.type==="week"?"selected":""}>week</option>
+            <option value="vac" ${w.type==="vac"?"selected":""}>vac</option>
+          </select>
+        </td>
+        <td><input class="mono" data-k="weekNumber" data-i="${idx}" type="number" min="0" value="${escapeHtml(w.weekNumber)}"></td>
+        <td><input data-k="title" data-i="${idx}" type="text" value="${escapeHtml(w.title)}" placeholder="عنوان الأسبوع"></td>
+        <td><input class="mono" data-k="startDateISO" data-i="${idx}" type="date" value="${escapeHtml(w.startDateISO)}"></td>
+        <td><button class="danger" data-act="delWeek" data-i="${idx}">حذف</button></td>
+      `;
+      weeksTbody.appendChild(tr);
+    });
+
+    weeksTbody.querySelectorAll('select[data-k="type"]').forEach(sel=>{
+      const i = Number(sel.dataset.i);
+      const row = sel.closest("tr");
+      const weekNum = row.querySelector('input[data-k="weekNumber"]');
+      if(weeksDraft[i]?.type==="vac" && weekNum){
+        weekNum.value="0";
+        weekNum.disabled=true;
+        weekNum.style.opacity="0.6";
+      }else if(weekNum){
+        weekNum.disabled=false;
+        weekNum.style.opacity="1";
+      }
+    });
+  }
+
+  document.addEventListener("input", (e)=>{
+    const el = e.target;
+    if(!el || !el.closest("#weeksTbody")) return;
+    const i = Number(el.dataset.i);
+    const k = el.dataset.k;
+    if(Number.isNaN(i) || !k) return;
+    let v = el.value;
+    if(k==="order" || k==="weekNumber") v = Number(v||0);
+    weeksDraft[i][k] = v;
+  });
+
+  document.addEventListener("change", (e)=>{
+    const el = e.target;
+    if(!el || !el.closest("#weeksTbody")) return;
+    const i = Number(el.dataset.i);
+    const k = el.dataset.k;
+    if(Number.isNaN(i) || !k) return;
+
+    if(k==="type"){
+      weeksDraft[i].type = (el.value==="vac"?"vac":"week");
+      if(weeksDraft[i].type==="vac") weeksDraft[i].weekNumber = 0;
+      renderWeeksTable();
+    }else{
+      let v = el.value;
+      if(k==="order" || k==="weekNumber") v = Number(v||0);
+      weeksDraft[i][k] = v;
+    }
+  });
+
+  document.addEventListener("click", async (e)=>{
+    const delBtn = e.target.closest('button[data-act="delWeek"]');
+    if(!delBtn) return;
+    const i = Number(delBtn.dataset.i);
+    if(Number.isNaN(i)) return;
+    if(!confirm("حذف هذا الأسبوع؟")) return;
+
+    const item = weeksDraft[i];
+    try{
+      if(state.firebaseReady && state.isAdmin && item.id){
+        await deleteDoc(doc(db,"publicWeeks", item.id));
+      }else{
+        weeksDraft.splice(i,1);
+        normalizeWeeksDraft();
+        renderWeeksTable();
+      }
+    }catch(err){
+      alert(err?.message || "فشل الحذف.");
+    }
+  });
+
+  btnAddWeek?.addEventListener("click", ()=>{
+    if(!state.isAdmin) return alert("للمدير فقط.");
+    const maxOrder = weeksDraft.reduce((m,w)=>Math.max(m, Number(w.order||0)),0);
+    weeksDraft.push({id:null,order:maxOrder+1,type:"week",weekNumber:0,title:"أسبوع جديد",startDateISO:""});
+    normalizeWeeksDraft();
+    renderWeeksTable();
+  });
+
+  btnAddVac?.addEventListener("click", ()=>{
+    if(!state.isAdmin) return alert("للمدير فقط.");
+    const maxOrder = weeksDraft.reduce((m,w)=>Math.max(m, Number(w.order||0)),0);
+    weeksDraft.push({id:null,order:maxOrder+1,type:"vac",weekNumber:0,title:"إجازة (أسبوع)",startDateISO:""});
+    normalizeWeeksDraft();
+    renderWeeksTable();
+  });
+
+  btnSaveWeeks?.addEventListener("click", async ()=>{
+    if(!state.firebaseReady) return alert("Firebase غير جاهز.");
+    if(!state.isAdmin) return alert("هذه العملية للمدير فقط.");
+
+    normalizeWeeksDraft();
+    for(const w of weeksDraft){
+      if(!w.startDateISO) return alert("يوجد أسبوع بدون startDateISO.");
+      if(w.type!=="vac" && !w.title) return alert("يوجد أسبوع بدون عنوان.");
+      if(w.type==="vac") w.weekNumber = 0;
+    }
+
+    try{
+      const snap = await getDocs(collection(db,"publicWeeks"));
+      const batch = writeBatch(db);
+      snap.docs.forEach(d=> batch.delete(d.ref));
+
+      weeksDraft.sort((a,b)=>a.order-b.order).forEach(w=>{
+        const ref = doc(collection(db,"publicWeeks"));
+        batch.set(ref, {
+          order:Number(w.order),
+          type:(w.type==="vac"?"vac":"week"),
+          weekNumber:Number(w.weekNumber||0),
+          title:(w.title||"").trim(),
+          startDateISO:(w.startDateISO||"").trim()
+        });
+      });
+
+      await batch.commit();
+      alert("تم حفظ الأسابيع.");
+    }catch(err){
+      alert(err?.message || "فشل حفظ الأسابيع.");
+    }
+  });
+
   loadWeeksDraftFromState();
   renderWeeksTable();
   renderCalendar();
@@ -936,29 +1124,57 @@
 
   /* ===== Live Firebase ===== */
   if(state.firebaseReady){
+    let unsubPublic=null, unsubPrivate=null, unsubWeeks=null;
+
+    function listenPublicEvents(){
+      const qy = query(collection(db,"publicEvents"), orderBy("dateISO","asc"));
+      return onSnapshot(qy, (snap)=>{
+        state.publicEvents = snap.docs.map(d=>({id:d.id, scope:"public", ...d.data()}));
+        renderCalendar();
+      });
+    }
+    function listenPrivateEvents(uid){
+      const qy = query(collection(db,`users/${uid}/privateEvents`), orderBy("dateISO","asc"));
+      return onSnapshot(qy, (snap)=>{
+        state.privateEvents = snap.docs.map(d=>({id:d.id, scope:"private", ...d.data()}));
+        renderCalendar();
+      });
+    }
+    function listenWeeks(){
+      const qy = query(collection(db,"publicWeeks"), orderBy("order","asc"));
+      return onSnapshot(qy, (snap)=>{
+        state.weeks = snap.docs.map(d=>({id:d.id, ...d.data()}));
+        loadWeeksDraftFromState();
+        renderWeeksTable();
+        renderCalendar();
+      });
+    }
+
     onAuthStateChanged(auth, async (user)=>{
       state.user = user;
 
-      // stop old listeners
       if(unsubPublic) unsubPublic();
       if(unsubPrivate) unsubPrivate();
       if(unsubWeeks) unsubWeeks();
       unsubPublic = unsubPrivate = unsubWeeks = null;
 
       if(user){
-        // ✅ admin via Firestore admins/{uid}
         state.isAdmin = await checkIsAdmin(user.uid);
       }else{
         state.isAdmin = false;
       }
 
-      // start listeners
+      // close accordions for non-admin
+      if(!state.isAdmin){
+        publicEventBox.style.display = "none";
+        weeksAdminBox.style.display = "none";
+        publicChev.textContent = "▾";
+        weeksChev.textContent = "▾";
+      }
+
       unsubWeeks = listenWeeks();
       unsubPublic = listenPublicEvents();
       unsubPrivate = user ? listenPrivateEvents(user.uid) : null;
-
-      // close weeks box if not admin
-      if(!state.isAdmin) weeksAdminBox.style.display = "none";
 
       setRolePill();
       renderCalendar();
