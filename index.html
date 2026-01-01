@@ -100,7 +100,6 @@
     .panelHead strong{font-size:13px}
     .panelBody{padding:12px 14px}
 
-    /* accordion head hover */
     .accordionHead{cursor:pointer}
     .accordionHead:hover{background:rgba(255,255,255,.06)}
 
@@ -198,8 +197,6 @@
       font-size:12px;
       color:rgba(255,255,255,.92);
     }
-
-    /* small arrow */
     .chev{opacity:.9;font-weight:900}
   </style>
 </head>
@@ -412,6 +409,7 @@
     {name:"الجمعة", off:true},
     {name:"السبت", off:true},
   ];
+
   function escapeHtml(str){
     return String(str||"")
       .replaceAll("&","&amp;").replaceAll("<","&lt;")
@@ -419,16 +417,20 @@
       .replaceAll('"',"&quot;")
       .replaceAll("'","&#039;");
   }
+
   function toISODate(d){
     const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,"0"), da=String(d.getDate()).padStart(2,"0");
     return `${y}-${m}-${da}`;
   }
+
   function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+
   function startOfWeekSunday(d){
     const x=new Date(d); const day=x.getDay();
     x.setDate(x.getDate()-day); x.setHours(0,0,0,0);
     return x;
   }
+
   function parseISOToDate(iso){ return new Date((iso||"").trim()+"T00:00:00"); }
 
   /* ===== Umm al-Qura ===== */
@@ -438,9 +440,11 @@
       return !!fmt.format(new Date());
     }catch(e){ return false; }
   })();
+
   const fmtHijri = hasUmalqura
     ? new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura", { year:"numeric", month:"long", day:"numeric" })
     : null;
+
   const fmtG = new Intl.DateTimeFormat("ar-SA", { year:"numeric", month:"2-digit", day:"2-digit" });
 
   /* ===== Default weeks plan ===== */
@@ -451,8 +455,10 @@
     for(let w=1; w<=18; w++) plan.push({ type:"week", weekNumber:w, title:`الأسبوع ${w}` });
     return plan;
   }
+
   const basePlan = buildDefaultWeekPlan();
   const fallbackStartSunday = startOfWeekSunday(new Date());
+
   function defaultWeeksFromFallback(){
     return basePlan.map((w,i)=>({
       id:null,
@@ -561,11 +567,12 @@
     }
   }
 
-  /* ===== Accordion clicks (head) ===== */
+  /* ===== Accordion clicks ===== */
   publicHead?.addEventListener("click", ()=>{
     if(!state.isAdmin) return alert("هذه الميزة للمدير فقط.");
     toggleBox(publicEventBox, publicChev);
   });
+
   weeksHead?.addEventListener("click", ()=>{
     if(!state.isAdmin) return alert("هذه الميزة للمدير فقط.");
     toggleBox(weeksAdminBox, weeksChev);
@@ -576,6 +583,7 @@
     loginPanel.style.display = "block";
     window.scrollTo({top:0, behavior:"smooth"});
   };
+
   btnLogout.onclick = async ()=>{ if(auth) await signOut(auth); };
 
   btnLogin.onclick = async ()=>{
@@ -602,35 +610,9 @@
     }
   };
 
-  /* ===== Firestore listeners ===== */
-  let unsubPublic=null, unsubPrivate=null, unsubWeeks=null;
-
-  function listenPublicEvents(){
-    const qy = query(collection(db,"publicEvents"), orderBy("dateISO","asc"));
-    return onSnapshot(qy, (snap)=>{
-      state.publicEvents = snap.docs.map(d=>({id:d.id, scope:"public", ...d.data()}));
-      renderCalendar();
-    });
-  }
-  function listenPrivateEvents(uid){
-    const qy = query(collection(db,`users/${uid}/privateEvents`), orderBy("dateISO","asc"));
-    return onSnapshot(qy, (snap)=>{
-      state.privateEvents = snap.docs.map(d=>({id:d.id, scope:"private", ...d.data()}));
-      renderCalendar();
-    });
-  }
-  function listenWeeks(){
-    const qy = query(collection(db,"publicWeeks"), orderBy("order","asc"));
-    return onSnapshot(qy, (snap)=>{
-      state.weeks = snap.docs.map(d=>({id:d.id, ...d.data()}));
-      loadWeeksDraftFromState();
-      renderWeeksTable();
-      renderCalendar();
-    });
-  }
-
-  /* ===== Weeks editor ===== */
+  /* ===== Weeks editor (draft) ===== */
   let weeksDraft = [];
+
   function normalizeWeeksDraft(){
     weeksDraft = weeksDraft.map(w=>({
       id: w.id || null,
@@ -644,6 +626,7 @@
     weeksDraft.forEach((w,i)=>{ if(!w.order || w.order<1) w.order=i+1; });
     weeksDraft.sort((a,b)=>a.order-b.order);
   }
+
   function loadWeeksDraftFromState(){
     const src = (state.weeks && state.weeks.length) ? state.weeks : defaultWeeksFromFallback();
     weeksDraft = src.map(w=>({
@@ -656,6 +639,7 @@
     }));
     normalizeWeeksDraft();
   }
+
   function renderWeeksTable(){
     if(!weeksTbody) return;
     weeksTbody.innerHTML = "";
@@ -954,169 +938,7 @@
     });
   }
 
-  /* ===== Boot (works even without Firebase) ===== */
-  let weeksDraft = [];
-  function normalizeWeeksDraft(){
-    weeksDraft = weeksDraft.map(w=>({
-      id: w.id || null,
-      order: Number(w.order||0),
-      type: (w.type==="vac"?"vac":"week"),
-      weekNumber: Number(w.weekNumber||0),
-      title: (w.title||"").trim(),
-      startDateISO: (w.startDateISO||"").trim()
-    })).sort((a,b)=>a.order-b.order);
-
-    weeksDraft.forEach((w,i)=>{ if(!w.order || w.order<1) w.order=i+1; });
-    weeksDraft.sort((a,b)=>a.order-b.order);
-  }
-  function loadWeeksDraftFromState(){
-    const src = (state.weeks && state.weeks.length) ? state.weeks : defaultWeeksFromFallback();
-    weeksDraft = src.map(w=>({
-      id:w.id||null,
-      order:Number(w.order||0),
-      type:(w.type==="vac"?"vac":"week"),
-      weekNumber:Number(w.weekNumber||0),
-      title:w.title||"",
-      startDateISO:w.startDateISO||""
-    }));
-    normalizeWeeksDraft();
-  }
-  function renderWeeksTable(){
-    if(!weeksTbody) return;
-    weeksTbody.innerHTML = "";
-    weeksDraft.forEach((w,idx)=>{
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td><input class="mono" data-k="order" data-i="${idx}" type="number" min="1" value="${escapeHtml(w.order)}"></td>
-        <td>
-          <select data-k="type" data-i="${idx}">
-            <option value="week" ${w.type==="week"?"selected":""}>week</option>
-            <option value="vac" ${w.type==="vac"?"selected":""}>vac</option>
-          </select>
-        </td>
-        <td><input class="mono" data-k="weekNumber" data-i="${idx}" type="number" min="0" value="${escapeHtml(w.weekNumber)}"></td>
-        <td><input data-k="title" data-i="${idx}" type="text" value="${escapeHtml(w.title)}" placeholder="عنوان الأسبوع"></td>
-        <td><input class="mono" data-k="startDateISO" data-i="${idx}" type="date" value="${escapeHtml(w.startDateISO)}"></td>
-        <td><button class="danger" data-act="delWeek" data-i="${idx}">حذف</button></td>
-      `;
-      weeksTbody.appendChild(tr);
-    });
-
-    weeksTbody.querySelectorAll('select[data-k="type"]').forEach(sel=>{
-      const i = Number(sel.dataset.i);
-      const row = sel.closest("tr");
-      const weekNum = row.querySelector('input[data-k="weekNumber"]');
-      if(weeksDraft[i]?.type==="vac" && weekNum){
-        weekNum.value="0";
-        weekNum.disabled=true;
-        weekNum.style.opacity="0.6";
-      }else if(weekNum){
-        weekNum.disabled=false;
-        weekNum.style.opacity="1";
-      }
-    });
-  }
-
-  document.addEventListener("input", (e)=>{
-    const el = e.target;
-    if(!el || !el.closest("#weeksTbody")) return;
-    const i = Number(el.dataset.i);
-    const k = el.dataset.k;
-    if(Number.isNaN(i) || !k) return;
-    let v = el.value;
-    if(k==="order" || k==="weekNumber") v = Number(v||0);
-    weeksDraft[i][k] = v;
-  });
-
-  document.addEventListener("change", (e)=>{
-    const el = e.target;
-    if(!el || !el.closest("#weeksTbody")) return;
-    const i = Number(el.dataset.i);
-    const k = el.dataset.k;
-    if(Number.isNaN(i) || !k) return;
-
-    if(k==="type"){
-      weeksDraft[i].type = (el.value==="vac"?"vac":"week");
-      if(weeksDraft[i].type==="vac") weeksDraft[i].weekNumber = 0;
-      renderWeeksTable();
-    }else{
-      let v = el.value;
-      if(k==="order" || k==="weekNumber") v = Number(v||0);
-      weeksDraft[i][k] = v;
-    }
-  });
-
-  document.addEventListener("click", async (e)=>{
-    const delBtn = e.target.closest('button[data-act="delWeek"]');
-    if(!delBtn) return;
-    const i = Number(delBtn.dataset.i);
-    if(Number.isNaN(i)) return;
-    if(!confirm("حذف هذا الأسبوع؟")) return;
-
-    const item = weeksDraft[i];
-    try{
-      if(state.firebaseReady && state.isAdmin && item.id){
-        await deleteDoc(doc(db,"publicWeeks", item.id));
-      }else{
-        weeksDraft.splice(i,1);
-        normalizeWeeksDraft();
-        renderWeeksTable();
-      }
-    }catch(err){
-      alert(err?.message || "فشل الحذف.");
-    }
-  });
-
-  btnAddWeek?.addEventListener("click", ()=>{
-    if(!state.isAdmin) return alert("للمدير فقط.");
-    const maxOrder = weeksDraft.reduce((m,w)=>Math.max(m, Number(w.order||0)),0);
-    weeksDraft.push({id:null,order:maxOrder+1,type:"week",weekNumber:0,title:"أسبوع جديد",startDateISO:""});
-    normalizeWeeksDraft();
-    renderWeeksTable();
-  });
-
-  btnAddVac?.addEventListener("click", ()=>{
-    if(!state.isAdmin) return alert("للمدير فقط.");
-    const maxOrder = weeksDraft.reduce((m,w)=>Math.max(m, Number(w.order||0)),0);
-    weeksDraft.push({id:null,order:maxOrder+1,type:"vac",weekNumber:0,title:"إجازة (أسبوع)",startDateISO:""});
-    normalizeWeeksDraft();
-    renderWeeksTable();
-  });
-
-  btnSaveWeeks?.addEventListener("click", async ()=>{
-    if(!state.firebaseReady) return alert("Firebase غير جاهز.");
-    if(!state.isAdmin) return alert("هذه العملية للمدير فقط.");
-
-    normalizeWeeksDraft();
-    for(const w of weeksDraft){
-      if(!w.startDateISO) return alert("يوجد أسبوع بدون startDateISO.");
-      if(w.type!=="vac" && !w.title) return alert("يوجد أسبوع بدون عنوان.");
-      if(w.type==="vac") w.weekNumber = 0;
-    }
-
-    try{
-      const snap = await getDocs(collection(db,"publicWeeks"));
-      const batch = writeBatch(db);
-      snap.docs.forEach(d=> batch.delete(d.ref));
-
-      weeksDraft.sort((a,b)=>a.order-b.order).forEach(w=>{
-        const ref = doc(collection(db,"publicWeeks"));
-        batch.set(ref, {
-          order:Number(w.order),
-          type:(w.type==="vac"?"vac":"week"),
-          weekNumber:Number(w.weekNumber||0),
-          title:(w.title||"").trim(),
-          startDateISO:(w.startDateISO||"").trim()
-        });
-      });
-
-      await batch.commit();
-      alert("تم حفظ الأسابيع.");
-    }catch(err){
-      alert(err?.message || "فشل حفظ الأسابيع.");
-    }
-  });
-
+  /* ===== Start ===== */
   loadWeeksDraftFromState();
   renderWeeksTable();
   renderCalendar();
@@ -1150,16 +972,18 @@
       });
     }
 
+    // guests see public
+    unsubWeeks = listenWeeks();
+    unsubPublic = listenPublicEvents();
+
     onAuthStateChanged(auth, async (user)=>{
       state.user = user;
 
-      if(unsubPublic) unsubPublic();
-      if(unsubPrivate) unsubPrivate();
-      if(unsubWeeks) unsubWeeks();
-      unsubPublic = unsubPrivate = unsubWeeks = null;
+      if(unsubPrivate){ unsubPrivate(); unsubPrivate=null; }
 
       if(user){
         state.isAdmin = await checkIsAdmin(user.uid);
+        unsubPrivate = listenPrivateEvents(user.uid);
       }else{
         state.isAdmin = false;
       }
@@ -1172,17 +996,9 @@
         weeksChev.textContent = "▾";
       }
 
-      unsubWeeks = listenWeeks();
-      unsubPublic = listenPublicEvents();
-      unsubPrivate = user ? listenPrivateEvents(user.uid) : null;
-
       setRolePill();
       renderCalendar();
     });
-
-    // guests also see public data
-    unsubWeeks = listenWeeks();
-    unsubPublic = listenPublicEvents();
   }
 </script>
 </body>
