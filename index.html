@@ -3,18 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>التقويم الدراسي الأسبوعي</title>
+  <title>التقويم الدراسي الأسبوعي (Pro)</title>
 
   <style>
     :root{
-      --bg:#0f172a;
-      --line:rgba(255,255,255,.10);
-      --text:#e6eeff;
-      --muted:#a7b4e6;
-      --accent:#7c5cff;
-      --ok:#2fe7a4;
-      --warn:#ffd166;
-      --danger:#ff5c7a;
+      --bg:#0f172a; --line:rgba(255,255,255,.10); --text:#e6eeff; --muted:#a7b4e6;
+      --accent:#7c5cff; --ok:#2fe7a4; --warn:#ffd166; --danger:#ff5c7a;
       --friSat: rgba(255, 209, 102, .16);
     }
     *{box-sizing:border-box}
@@ -32,9 +26,7 @@
       display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;
       border:1px solid var(--line);
       background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
-      border-radius:16px;
-      padding:12px 14px;
-      backdrop-filter: blur(10px);
+      border-radius:16px; padding:12px 14px; backdrop-filter: blur(10px);
     }
     .brand{display:flex;gap:10px;align-items:center}
     .logo{
@@ -49,24 +41,17 @@
       display:inline-flex;gap:8px;align-items:center;
       padding:8px 10px;border-radius:999px;border:1px solid var(--line);
       background:rgba(255,255,255,.05);font-size:12px;color:var(--muted);
-      max-width: 100%;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      white-space:nowrap;
+      max-width: 100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
     }
     .dot{width:10px;height:10px;border-radius:50%}
     .dot.guest{background:rgba(255,255,255,.35)}
     .dot.user{background:rgba(53,198,255,.8)}
     .dot.admin{background:var(--ok)}
     button{
-      appearance:none;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.06);
-      color:var(--text);
-      padding:10px 12px;border-radius:12px;
-      cursor:pointer;
-      font-weight:900;
-      transition:.12s transform,.12s background;
+      appearance:none; border:1px solid var(--line);
+      background:rgba(255,255,255,.06); color:var(--text);
+      padding:10px 12px;border-radius:12px; cursor:pointer;
+      font-weight:900; transition:.12s transform,.12s background;
     }
     button:hover{transform:translateY(-1px);background:rgba(255,255,255,.09)}
     button.primary{background:rgba(124,92,255,.25);border-color:rgba(124,92,255,.45)}
@@ -74,113 +59,70 @@
     button.soft{background:rgba(47,231,164,.10);border-color:rgba(47,231,164,.25)}
 
     .note{
-      margin-top:12px;
-      border:1px dashed rgba(255,255,255,.18);
-      background:rgba(255,255,255,.04);
-      border-radius:14px;
-      padding:10px 12px;
-      color:var(--muted);
-      font-size:12px;
+      margin-top:12px; border:1px dashed rgba(255,255,255,.18);
+      background:rgba(255,255,255,.04); border-radius:14px;
+      padding:10px 12px; color:var(--muted); font-size:12px;
     }
 
     .panels{margin-top:14px;display:grid;grid-template-columns:1fr;gap:12px}
-    .panel{
-      border:1px solid var(--line);
-      border-radius:16px;
-      overflow:hidden;
+    .panel{border:1px solid var(--line);border-radius:16px;overflow:hidden;
       background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
     }
     .panelHead{
-      padding:12px 14px;
-      display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;
-      background:rgba(0,0,0,.18);
-      border-bottom:1px solid var(--line);
-      user-select:none;
+      padding:12px 14px; display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+      background:rgba(0,0,0,.18); border-bottom:1px solid var(--line); user-select:none;
     }
     .panelHead strong{font-size:13px}
     .panelBody{padding:12px 14px}
-
     .accordionHead{cursor:pointer}
     .accordionHead:hover{background:rgba(255,255,255,.06)}
-
     .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     @media (max-width:860px){ .grid2{grid-template-columns:1fr} }
 
     label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
     input, textarea, select{
-      width:100%;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.06);
-      color:var(--text);
-      outline:none;
+      width:100%; padding:10px 12px; border-radius:12px;
+      border:1px solid var(--line); background:rgba(255,255,255,.06);
+      color:var(--text); outline:none;
     }
     textarea{min-height:88px;resize:vertical}
     .rowBtns{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
 
     .weeks{margin-top:14px;display:grid;gap:12px}
-    .week{
-      border:1px solid var(--line);
-      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      border-radius:16px;
-      overflow:hidden;
+    .week{border:1px solid var(--line); background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border-radius:16px; overflow:hidden;
     }
-    .weekHead{
-      padding:10px 12px;
-      border-bottom:1px solid var(--line);
-      background:rgba(0,0,0,.18);
+    .weekHead{padding:10px 12px; border-bottom:1px solid var(--line); background:rgba(0,0,0,.18);
       display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;
     }
     .weekHead .title{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
     .weekHead .title strong{font-size:13px}
     .weekHead .title span{font-size:12px;color:var(--muted)}
-    .table{
-      display:grid;
-      grid-template-columns: repeat(7, 1fr);
-      border-top:1px solid var(--line);
-    }
-    .th,.td{
-      padding:10px;
-      border-left:1px solid var(--line);
-      border-bottom:1px solid var(--line);
-      min-height:96px;
-      position:relative;
-    }
+    .table{display:grid; grid-template-columns: repeat(7, 1fr); border-top:1px solid var(--line)}
+    .th,.td{padding:10px;border-left:1px solid var(--line);border-bottom:1px solid var(--line);min-height:96px;position:relative}
     .th{min-height:auto;background:rgba(255,255,255,.04);text-align:center;font-weight:900;padding:10px 6px}
     .th:last-child,.td:last-child{border-left:none}
     .friSat{background:var(--friSat)}
     .gDate{font-size:12px;color:var(--muted)}
     .hDate{font-size:12px}
     .today{
-      position:absolute;top:8px;left:8px;
-      font-size:11px;font-weight:900;color:var(--ok);
-      padding:4px 8px;border-radius:999px;
-      border:1px solid rgba(47,231,164,.45);
-      background:rgba(47,231,164,.12);
+      position:absolute;top:8px;left:8px;font-size:11px;font-weight:900;color:var(--ok);
+      padding:4px 8px;border-radius:999px;border:1px solid rgba(47,231,164,.45);background:rgba(47,231,164,.12);
     }
     .events{margin-top:8px;display:flex;flex-direction:column;gap:6px}
     .ev{
       display:flex;gap:8px;align-items:flex-start;justify-content:space-between;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.06);
-      border-radius:12px;
-      padding:6px 8px;
-      font-size:12px;
+      border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06);
+      border-radius:12px; padding:6px 8px; font-size:12px;
     }
     .ev .tag{width:10px;height:10px;border-radius:3px;margin-top:3px;flex:0 0 auto}
     .ev .txt{flex:1}
-    .ev .x{
-      cursor:pointer;font-weight:900;color:rgba(255,255,255,.75);
-      padding:0 6px;border-radius:8px;line-height:18px;
-    }
+    .ev .x{cursor:pointer;font-weight:900;color:rgba(255,255,255,.75);padding:0 6px;border-radius:8px;line-height:18px}
     .ev .x:hover{background:rgba(255,255,255,.08)}
     .badge{
       display:inline-flex;font-size:10px;font-weight:900;
-      padding:3px 7px;border-radius:999px;
-      border:1px solid rgba(255,255,255,.18);
-      background:rgba(0,0,0,.18);
-      margin-top:6px;color:rgba(255,255,255,.9);
+      padding:3px 7px;border-radius:999px;border:1px solid rgba(255,255,255,.18);
+      background:rgba(0,0,0,.18); margin-top:6px;color:rgba(255,255,255,.9);
     }
 
     .scroll{overflow:auto;border:1px solid var(--line);border-radius:14px}
@@ -192,12 +134,12 @@
     .warnBox{
       border:1px solid rgba(255,209,102,.35);
       background:rgba(255,209,102,.10);
-      border-radius:14px;
-      padding:10px 12px;
-      font-size:12px;
-      color:rgba(255,255,255,.92);
+      border-radius:14px; padding:10px 12px; font-size:12px; color:rgba(255,255,255,.92);
     }
     .chev{opacity:.9;font-weight:900}
+    .small{font-size:12px;color:var(--muted)}
+    .okText{color:var(--ok);font-weight:900}
+    .badText{color:var(--danger);font-weight:900}
   </style>
 </head>
 
@@ -207,8 +149,8 @@
     <div class="brand">
       <div class="logo"></div>
       <div>
-        <h1>التقويم الدراسي الأسبوعي</h1>
-        <div class="sub">خفيف + احترافي | Firebase + Firestore</div>
+        <h1>التقويم الدراسي الأسبوعي (Pro)</h1>
+        <div class="sub">إدارة أسابيع + عام/خاص + استيراد CSV</div>
       </div>
     </div>
 
@@ -252,7 +194,7 @@
     <div class="panel">
       <div class="panelHead">
         <strong>إضافة حدث خاص (يظهر لك فقط)</strong>
-        <span class="sub">اضغط على أي يوم في التقويم لتعبئة التاريخ تلقائيًا</span>
+        <span class="sub">اضغط على أي يوم لتعبئة التاريخ تلقائيًا</span>
       </div>
       <div class="panelBody">
         <div class="grid2">
@@ -368,6 +310,47 @@
           </div>
 
         </div><!-- grid2 -->
+
+        <!-- CSV Import (PRO) -->
+        <div class="panel" style="border-radius:14px;margin-top:12px">
+          <div id="csvHead" class="panelHead accordionHead">
+            <strong>استيراد CSV (Pro)</strong>
+            <span class="sub">استيراد دفعة واحدة للأحداث العامة/الخاصة</span>
+            <span class="chev" id="csvChev">▾</span>
+          </div>
+
+          <div id="csvBox" class="panelBody" style="display:none;">
+            <div class="note">
+              الأعمدة المطلوبة: <span class="mono">dateISO,title,note,color,scope</span>
+              <br>scope: <b>public</b> أو <b>private</b>. إذا لم يوجد scope: سيُحدَّد تلقائياً.
+            </div>
+
+            <div class="grid2" style="margin-top:10px">
+              <div>
+                <label>ملف CSV</label>
+                <input id="csvFile" type="file" accept=".csv,text/csv">
+              </div>
+              <div>
+                <label>سلوك الاستيراد</label>
+                <select id="csvMode">
+                  <option value="append">إضافة (بدون حذف القديم)</option>
+                  <option value="replace_public">استبدال الأحداث العامة فقط (يحذف العامة ثم يضيف)</option>
+                </select>
+                <div class="small" style="margin-top:6px">
+                  خيار الاستبدال يؤثر على <b>publicEvents</b> فقط.
+                </div>
+              </div>
+            </div>
+
+            <div class="rowBtns" style="margin-top:10px;justify-content:flex-start">
+              <button id="btnCsvPreview" class="soft">معاينة</button>
+              <button id="btnCsvImport" class="primary">استيراد</button>
+            </div>
+
+            <div id="csvResult" class="note" style="display:none;"></div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -401,13 +384,8 @@
 
   /* ===== Helpers ===== */
   const days = [
-    {name:"الأحد", off:false},
-    {name:"الإثنين", off:false},
-    {name:"الثلاثاء", off:false},
-    {name:"الأربعاء", off:false},
-    {name:"الخميس", off:false},
-    {name:"الجمعة", off:true},
-    {name:"السبت", off:true},
+    {name:"الأحد", off:false},{name:"الإثنين", off:false},{name:"الثلاثاء", off:false},
+    {name:"الأربعاء", off:false},{name:"الخميس", off:false},{name:"الجمعة", off:true},{name:"السبت", off:true},
   ];
 
   function escapeHtml(str){
@@ -417,21 +395,27 @@
       .replaceAll('"',"&quot;")
       .replaceAll("'","&#039;");
   }
-
   function toISODate(d){
     const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,"0"), da=String(d.getDate()).padStart(2,"0");
     return `${y}-${m}-${da}`;
   }
-
   function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
-
   function startOfWeekSunday(d){
     const x=new Date(d); const day=x.getDay();
-    x.setDate(x.getDate()-day); x.setHours(0,0,0,0);
-    return x;
+    x.setDate(x.getDate()-day); x.setHours(0,0,0,0); return x;
   }
-
   function parseISOToDate(iso){ return new Date((iso||"").trim()+"T00:00:00"); }
+  function isValidISODate(s){ return /^\d{4}-\d{2}-\d{2}$/.test(String(s||"").trim()); }
+  function normColor(c){
+    const x=String(c||"").trim();
+    if(/^#[0-9a-fA-F]{6}$/.test(x)) return x;
+    return "#7c5cff";
+  }
+  function cleanScope(s){
+    const x=String(s||"").trim().toLowerCase();
+    if(x==="public"||x==="private") return x;
+    return "";
+  }
 
   /* ===== Umm al-Qura ===== */
   const hasUmalqura = (() => {
@@ -440,11 +424,9 @@
       return !!fmt.format(new Date());
     }catch(e){ return false; }
   })();
-
   const fmtHijri = hasUmalqura
     ? new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura", { year:"numeric", month:"long", day:"numeric" })
     : null;
-
   const fmtG = new Intl.DateTimeFormat("ar-SA", { year:"numeric", month:"2-digit", day:"2-digit" });
 
   /* ===== Default weeks plan ===== */
@@ -455,17 +437,11 @@
     for(let w=1; w<=18; w++) plan.push({ type:"week", weekNumber:w, title:`الأسبوع ${w}` });
     return plan;
   }
-
   const basePlan = buildDefaultWeekPlan();
   const fallbackStartSunday = startOfWeekSunday(new Date());
-
   function defaultWeeksFromFallback(){
     return basePlan.map((w,i)=>({
-      id:null,
-      order:i+1,
-      type:w.type,
-      weekNumber:w.weekNumber,
-      title:w.title,
+      id:null, order:i+1, type:w.type, weekNumber:w.weekNumber, title:w.title,
       startDateISO: toISODate(addDays(fallbackStartSunday, i*7))
     }));
   }
@@ -512,14 +488,20 @@
   const btnSaveWeeks = document.getElementById("btnSaveWeeks");
   const weeksTbody = document.getElementById("weeksTbody");
 
+  // CSV PRO
+  const csvHead = document.getElementById("csvHead");
+  const csvBox = document.getElementById("csvBox");
+  const csvChev = document.getElementById("csvChev");
+  const csvFile = document.getElementById("csvFile");
+  const csvMode = document.getElementById("csvMode");
+  const btnCsvPreview = document.getElementById("btnCsvPreview");
+  const btnCsvImport = document.getElementById("btnCsvImport");
+  const csvResult = document.getElementById("csvResult");
+
   /* ===== App state ===== */
   const state = {
-    user:null,
-    isAdmin:false,
-    firebaseReady:false,
-    publicEvents:[],
-    privateEvents:[],
-    weeks:[]
+    user:null, isAdmin:false, firebaseReady:false,
+    publicEvents:[], privateEvents:[], weeks:[]
   };
 
   function setRolePill(){
@@ -554,7 +536,7 @@
   }catch(e){
     state.firebaseReady = false;
     demoNote.style.display = "block";
-    demoNote.innerHTML = `⚠️ <b>Demo Mode:</b> بيانات Firebase غير صحيحة أو ناقصة. سيتم عرض التقويم بدون تسجيل دخول/حفظ.`;
+    demoNote.innerHTML = `⚠️ <b>Demo Mode:</b> بيانات Firebase غير صحيحة أو ناقصة.`;
   }
 
   /* ===== Admin check via Firestore: admins/{uid} ===== */
@@ -562,9 +544,7 @@
     try{
       const snap = await getDoc(doc(db, "admins", uid));
       return snap.exists();
-    }catch(e){
-      return false;
-    }
+    }catch(e){ return false; }
   }
 
   /* ===== Accordion clicks ===== */
@@ -572,10 +552,13 @@
     if(!state.isAdmin) return alert("هذه الميزة للمدير فقط.");
     toggleBox(publicEventBox, publicChev);
   });
-
   weeksHead?.addEventListener("click", ()=>{
     if(!state.isAdmin) return alert("هذه الميزة للمدير فقط.");
     toggleBox(weeksAdminBox, weeksChev);
+  });
+  csvHead?.addEventListener("click", ()=>{
+    if(!state.isAdmin) return alert("هذه الميزة للمدير فقط.");
+    toggleBox(csvBox, csvChev);
   });
 
   /* ===== Auth actions ===== */
@@ -583,7 +566,6 @@
     loginPanel.style.display = "block";
     window.scrollTo({top:0, behavior:"smooth"});
   };
-
   btnLogout.onclick = async ()=>{ if(auth) await signOut(auth); };
 
   btnLogin.onclick = async ()=>{
@@ -591,11 +573,8 @@
     const email = loginEmail.value.trim();
     const pass  = loginPass.value;
     if(!email || !pass) return alert("أدخل البريد وكلمة المرور.");
-    try{
-      await signInWithEmailAndPassword(auth, email, pass);
-    }catch(err){
-      alert(err?.message || "فشل تسجيل الدخول.");
-    }
+    try{ await signInWithEmailAndPassword(auth, email, pass); }
+    catch(err){ alert(err?.message || "فشل تسجيل الدخول."); }
   };
 
   btnForgot.onclick = async ()=>{
@@ -612,7 +591,6 @@
 
   /* ===== Weeks editor (draft) ===== */
   let weeksDraft = [];
-
   function normalizeWeeksDraft(){
     weeksDraft = weeksDraft.map(w=>({
       id: w.id || null,
@@ -622,11 +600,9 @@
       title: (w.title||"").trim(),
       startDateISO: (w.startDateISO||"").trim()
     })).sort((a,b)=>a.order-b.order);
-
     weeksDraft.forEach((w,i)=>{ if(!w.order || w.order<1) w.order=i+1; });
     weeksDraft.sort((a,b)=>a.order-b.order);
   }
-
   function loadWeeksDraftFromState(){
     const src = (state.weeks && state.weeks.length) ? state.weeks : defaultWeeksFromFallback();
     weeksDraft = src.map(w=>({
@@ -639,7 +615,6 @@
     }));
     normalizeWeeksDraft();
   }
-
   function renderWeeksTable(){
     if(!weeksTbody) return;
     weeksTbody.innerHTML = "";
@@ -654,7 +629,7 @@
           </select>
         </td>
         <td><input class="mono" data-k="weekNumber" data-i="${idx}" type="number" min="0" value="${escapeHtml(w.weekNumber)}"></td>
-        <td><input data-k="title" data-i="${idx}" type="text" value="${escapeHtml(w.title)}" placeholder="عنوان الأسبوع"></td>
+        <td><input data-k="title" data-i="${idx}" type="text" value="${escapeHtml(w.title)}"></td>
         <td><input class="mono" data-k="startDateISO" data-i="${idx}" type="date" value="${escapeHtml(w.startDateISO)}"></td>
         <td><button class="danger" data-act="delWeek" data-i="${idx}">حذف</button></td>
       `;
@@ -666,12 +641,9 @@
       const row = sel.closest("tr");
       const weekNum = row.querySelector('input[data-k="weekNumber"]');
       if(weeksDraft[i]?.type==="vac" && weekNum){
-        weekNum.value="0";
-        weekNum.disabled=true;
-        weekNum.style.opacity="0.6";
+        weekNum.value="0"; weekNum.disabled=true; weekNum.style.opacity="0.6";
       }else if(weekNum){
-        weekNum.disabled=false;
-        weekNum.style.opacity="1";
+        weekNum.disabled=false; weekNum.style.opacity="1";
       }
     });
   }
@@ -730,16 +702,14 @@
     if(!state.isAdmin) return alert("للمدير فقط.");
     const maxOrder = weeksDraft.reduce((m,w)=>Math.max(m, Number(w.order||0)),0);
     weeksDraft.push({id:null,order:maxOrder+1,type:"week",weekNumber:0,title:"أسبوع جديد",startDateISO:""});
-    normalizeWeeksDraft();
-    renderWeeksTable();
+    normalizeWeeksDraft(); renderWeeksTable();
   });
 
   btnAddVac?.addEventListener("click", ()=>{
     if(!state.isAdmin) return alert("للمدير فقط.");
     const maxOrder = weeksDraft.reduce((m,w)=>Math.max(m, Number(w.order||0)),0);
     weeksDraft.push({id:null,order:maxOrder+1,type:"vac",weekNumber:0,title:"إجازة (أسبوع)",startDateISO:""});
-    normalizeWeeksDraft();
-    renderWeeksTable();
+    normalizeWeeksDraft(); renderWeeksTable();
   });
 
   btnSaveWeeks?.addEventListener("click", async ()=>{
@@ -749,7 +719,6 @@
     normalizeWeeksDraft();
     for(const w of weeksDraft){
       if(!w.startDateISO) return alert("يوجد أسبوع بدون startDateISO.");
-      if(w.type!=="vac" && !w.title) return alert("يوجد أسبوع بدون عنوان.");
       if(w.type==="vac") w.weekNumber = 0;
     }
 
@@ -757,7 +726,6 @@
       const snap = await getDocs(collection(db,"publicWeeks"));
       const batch = writeBatch(db);
       snap.docs.forEach(d=> batch.delete(d.ref));
-
       weeksDraft.sort((a,b)=>a.order-b.order).forEach(w=>{
         const ref = doc(collection(db,"publicWeeks"));
         batch.set(ref, {
@@ -768,7 +736,6 @@
           startDateISO:(w.startDateISO||"").trim()
         });
       });
-
       await batch.commit();
       alert("تم حفظ الأسابيع.");
     }catch(err){
@@ -776,7 +743,7 @@
     }
   });
 
-  /* ===== Events ===== */
+  /* ===== Events add ===== */
   btnAddPublic?.addEventListener("click", async ()=>{
     if(!state.firebaseReady) return alert("Firebase غير جاهز.");
     if(!state.isAdmin) return alert("للمدير فقط.");
@@ -832,6 +799,164 @@
     }
   }
 
+  /* ===== CSV (PRO) ===== */
+  function parseCSV(text){
+    // CSV parser بسيط يدعم علامات اقتباس
+    const rows=[];
+    let i=0, field="", row=[], inQ=false;
+    const pushField=()=>{ row.push(field); field=""; };
+    const pushRow=()=>{ rows.push(row); row=[]; };
+    while(i<text.length){
+      const c=text[i];
+      if(inQ){
+        if(c === '"'){
+          if(text[i+1] === '"'){ field+='"'; i++; }
+          else inQ=false;
+        } else field+=c;
+      }else{
+        if(c === '"') inQ=true;
+        else if(c === ','){ pushField(); }
+        else if(c === '\n'){ pushField(); pushRow(); }
+        else if(c === '\r'){ /* ignore */ }
+        else field+=c;
+      }
+      i++;
+    }
+    pushField(); pushRow();
+    // حذف الصفوف الفارغة
+    return rows.filter(r=> r.some(x=>String(x||"").trim()!==""));
+  }
+
+  function rowsToObjects(rows){
+    if(!rows.length) return [];
+    const headers = rows[0].map(h=>String(h||"").trim());
+    const data = rows.slice(1);
+    return data.map(r=>{
+      const obj={};
+      headers.forEach((h,idx)=> obj[h]= (r[idx] ?? "").toString().trim());
+      return obj;
+    });
+  }
+
+  function summarizeImport(items, problems){
+    const pub = items.filter(x=>x.scope==="public").length;
+    const pri = items.filter(x=>x.scope==="private").length;
+    let html = `<b>جاهز للاستيراد:</b> <span class="okText">${items.length}</span> (عام: ${pub} | خاص: ${pri})`;
+    if(problems.length){
+      html += `<br><b>مشاكل:</b> <span class="badText">${problems.length}</span>`;
+      html += `<div class="small" style="margin-top:6px">أول 10 مشاكل:<br>${problems.slice(0,10).map(p=>escapeHtml(p)).join("<br>")}</div>`;
+    }
+    return html;
+  }
+
+  function normalizeImportedObjects(objs){
+    const items=[], problems=[];
+    objs.forEach((o,idx)=>{
+      const dateISO = String(o.dateISO||"").trim();
+      const title = String(o.title||"").trim();
+      const note  = String(o.note||"").trim();
+      const color = normColor(o.color);
+      let scope = cleanScope(o.scope);
+
+      if(!scope){
+        // default scope حسب الدور
+        scope = state.isAdmin ? "public" : "private";
+      }
+
+      if(!isValidISODate(dateISO)) problems.push(`السطر ${idx+2}: dateISO غير صحيح (${dateISO})`);
+      if(!title) problems.push(`السطر ${idx+2}: title فارغ`);
+      if(scope==="public" && !state.isAdmin) problems.push(`السطر ${idx+2}: scope=public يحتاج مدير`);
+
+      if(isValidISODate(dateISO) && title && (scope==="private" || state.isAdmin)){
+        items.push({
+          dateISO,
+          title,
+          note,
+          color,
+          scope
+        });
+      }
+    });
+    return {items, problems};
+  }
+
+  async function batchWriteDocs(makeRefAndData){
+    // تقسيم إلى دفعات <= 450 لتجنب حدود 500
+    const CHUNK = 450;
+    for(let i=0;i<makeRefAndData.length;i+=CHUNK){
+      const slice = makeRefAndData.slice(i,i+CHUNK);
+      const batch = writeBatch(db);
+      slice.forEach(({ref,data,op})=>{
+        if(op==="set") batch.set(ref,data);
+        else if(op==="del") batch.delete(ref);
+      });
+      await batch.commit();
+    }
+  }
+
+  btnCsvPreview?.addEventListener("click", async ()=>{
+    if(!csvFile.files?.length) return alert("اختر ملف CSV.");
+    const f = csvFile.files[0];
+    const text = await f.text();
+    const rows = parseCSV(text);
+    const objs = rowsToObjects(rows);
+    const {items, problems} = normalizeImportedObjects(objs);
+    csvResult.style.display = "block";
+    csvResult.innerHTML = summarizeImport(items, problems);
+  });
+
+  btnCsvImport?.addEventListener("click", async ()=>{
+    if(!state.firebaseReady) return alert("Firebase غير جاهز.");
+    if(!state.isAdmin) return alert("الاستيراد من لوحة المدير فقط.");
+    if(!csvFile.files?.length) return alert("اختر ملف CSV.");
+
+    const f = csvFile.files[0];
+    const text = await f.text();
+    const rows = parseCSV(text);
+    const objs = rowsToObjects(rows);
+    const {items, problems} = normalizeImportedObjects(objs);
+
+    csvResult.style.display = "block";
+    csvResult.innerHTML = summarizeImport(items, problems);
+
+    if(problems.length) return alert("يوجد أخطاء في CSV. أصلحها ثم أعد الاستيراد.");
+    if(!items.length) return alert("لا يوجد عناصر صالحة للاستيراد.");
+
+    const mode = csvMode.value;
+
+    // تجهيز عمليات الكتابة
+    const ops = [];
+
+    try{
+      // replace_public: حذف كل publicEvents أولاً
+      if(mode === "replace_public"){
+        const snap = await getDocs(collection(db,"publicEvents"));
+        snap.docs.forEach(d=>{
+          ops.push({op:"del", ref: d.ref});
+        });
+      }
+
+      items.forEach(it=>{
+        if(it.scope==="public"){
+          const ref = doc(collection(db,"publicEvents"));
+          ops.push({op:"set", ref, data:{...it, createdAt:Date.now()}});
+        }else{
+          // private: نخزنها تحت المستخدم الحالي (المدير أيضاً له privateEvents)
+          const uid = state.user?.uid;
+          if(!uid) return;
+          const ref = doc(collection(db, `users/${uid}/privateEvents`));
+          ops.push({op:"set", ref, data:{...it, createdAt:Date.now()}});
+        }
+      });
+
+      await batchWriteDocs(ops);
+      alert(`تم الاستيراد بنجاح: ${items.length} حدث.`);
+      csvFile.value="";
+    }catch(err){
+      alert(err?.message || "فشل الاستيراد.");
+    }
+  });
+
   /* ===== Render calendar ===== */
   function renderCalendar(){
     const plan = (state.weeks && state.weeks.length)
@@ -840,7 +965,6 @@
 
     const events = [...state.publicEvents, ...(state.user ? state.privateEvents : [])];
     const todayISO = toISODate(new Date());
-
     weeksGrid.innerHTML = "";
 
     plan.forEach(w=>{
@@ -869,7 +993,6 @@
         </div>
         <div class="table"></div>
       `;
-
       const table = card.querySelector(".table");
 
       days.forEach(d=>{
@@ -882,7 +1005,6 @@
       days.forEach((d,di)=>{
         const date = addDays(weekStart, di);
         const iso = toISODate(date);
-
         const td = document.createElement("div");
         td.className = "td" + (d.off ? " friSat" : "");
 
@@ -891,8 +1013,7 @@
 
         if(iso===todayISO){
           const b=document.createElement("div");
-          b.className="today";
-          b.textContent="اليوم";
+          b.className="today"; b.textContent="اليوم";
           td.appendChild(b);
         }
 
@@ -938,7 +1059,7 @@
     });
   }
 
-  /* ===== Start ===== */
+  /* ===== Start (local) ===== */
   loadWeeksDraftFromState();
   renderWeeksTable();
   renderCalendar();
@@ -946,8 +1067,6 @@
 
   /* ===== Live Firebase ===== */
   if(state.firebaseReady){
-    let unsubPublic=null, unsubPrivate=null, unsubWeeks=null;
-
     function listenPublicEvents(){
       const qy = query(collection(db,"publicEvents"), orderBy("dateISO","asc"));
       return onSnapshot(qy, (snap)=>{
@@ -972,13 +1091,12 @@
       });
     }
 
-    // guests see public
-    unsubWeeks = listenWeeks();
-    unsubPublic = listenPublicEvents();
+    let unsubPublic = listenPublicEvents();
+    let unsubWeeks  = listenWeeks();
+    let unsubPrivate = null;
 
     onAuthStateChanged(auth, async (user)=>{
       state.user = user;
-
       if(unsubPrivate){ unsubPrivate(); unsubPrivate=null; }
 
       if(user){
@@ -988,12 +1106,10 @@
         state.isAdmin = false;
       }
 
-      // close accordions for non-admin
+      // اغلاق الأكوردين لغير الأدمن
       if(!state.isAdmin){
-        publicEventBox.style.display = "none";
-        weeksAdminBox.style.display = "none";
-        publicChev.textContent = "▾";
-        weeksChev.textContent = "▾";
+        publicEventBox.style.display = "none"; weeksAdminBox.style.display = "none"; csvBox.style.display="none";
+        publicChev.textContent = "▾"; weeksChev.textContent = "▾"; csvChev.textContent="▾";
       }
 
       setRolePill();
