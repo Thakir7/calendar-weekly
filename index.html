@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>التقويم الدراسي الأسبوعي (Pro)</title>
+  <title>التقويم الدراسي الأسبوعي (Pro v3)</title>
 
   <style>
     :root{
@@ -57,6 +57,7 @@
     button.primary{background:rgba(124,92,255,.25);border-color:rgba(124,92,255,.45)}
     button.danger{background:rgba(255,92,122,.16);border-color:rgba(255,92,122,.35)}
     button.soft{background:rgba(47,231,164,.10);border-color:rgba(47,231,164,.25)}
+    button.ghost{background:transparent;border-color:rgba(255,255,255,.14)}
 
     .note{
       margin-top:12px; border:1px dashed rgba(255,255,255,.18);
@@ -137,9 +138,34 @@
       border-radius:14px; padding:10px 12px; font-size:12px; color:rgba(255,255,255,.92);
     }
     .chev{opacity:.9;font-weight:900}
-    .small{font-size:12px;color:var(--muted)}
-    .okText{color:var(--ok);font-weight:900}
-    .badText{color:var(--danger);font-weight:900}
+
+    /* Modal */
+    .modalBack{
+      position:fixed; inset:0;
+      background:rgba(0,0,0,.55);
+      display:none; align-items:center; justify-content:center;
+      padding:16px;
+      z-index:9999;
+    }
+    .modal{
+      width:100%;
+      max-width:720px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      backdrop-filter: blur(12px);
+      overflow:hidden;
+      box-shadow:0 30px 90px rgba(0,0,0,.45);
+    }
+    .modalHead{
+      padding:12px 14px;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      border-bottom:1px solid var(--line);
+      background:rgba(0,0,0,.20);
+    }
+    .modalHead strong{font-size:13px}
+    .modalBody{padding:12px 14px}
+    .hint{font-size:12px;color:var(--muted)}
   </style>
 </head>
 
@@ -149,8 +175,8 @@
     <div class="brand">
       <div class="logo"></div>
       <div>
-        <h1>التقويم الدراسي الأسبوعي (Pro)</h1>
-        <div class="sub">إدارة أسابيع + عام/خاص + استيراد CSV</div>
+        <h1>التقويم الدراسي الأسبوعي (Pro v3)</h1>
+        <div class="sub">لوحة المدير: أسابيع/إجازات + أحداث عامة (إضافة/تعديل/حذف + CSV) — إضافة حدث بالنقر على اليوم</div>
       </div>
     </div>
 
@@ -163,7 +189,7 @@
 
   <div id="demoNote" class="note" style="display:none;"></div>
 
-  <!-- Login panel -->
+  <!-- Login -->
   <div class="panels" id="loginPanel" style="display:none;">
     <div class="panel">
       <div class="panelHead">
@@ -189,45 +215,12 @@
     </div>
   </div>
 
-  <!-- User panel -->
-  <div class="panels" id="userPanel" style="display:none;">
-    <div class="panel">
-      <div class="panelHead">
-        <strong>إضافة حدث خاص (يظهر لك فقط)</strong>
-        <span class="sub">اضغط على أي يوم لتعبئة التاريخ تلقائيًا</span>
-      </div>
-      <div class="panelBody">
-        <div class="grid2">
-          <div>
-            <label>التاريخ</label>
-            <input id="priDate" type="date">
-          </div>
-          <div>
-            <label>اللون</label>
-            <input id="priColor" type="color" value="#35c6ff">
-          </div>
-        </div>
-        <div style="margin-top:10px">
-          <label>العنوان</label>
-          <input id="priTitle" type="text" placeholder="مثال: متابعة">
-        </div>
-        <div style="margin-top:10px">
-          <label>ملاحظات (اختياري)</label>
-          <textarea id="priNote" placeholder="تفاصيل..."></textarea>
-        </div>
-        <div style="margin-top:10px" class="rowBtns">
-          <button id="btnAddPrivate" class="primary">إضافة الحدث الخاص</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Admin panel -->
+  <!-- Admin Panel -->
   <div class="panels" id="adminPanel" style="display:none;">
     <div class="panel">
       <div class="panelHead">
-        <strong>لوحة المدير</strong>
-        <span class="sub">الأدمن من Firestore: admins/{uid}</span>
+        <strong>لوحة تحكم المدير</strong>
+        <span class="sub">Admins: admins/{uid}</span>
       </div>
       <div class="panelBody">
         <div class="warnBox" style="margin-bottom:10px">
@@ -236,51 +229,74 @@
 
         <div class="grid2">
 
-          <!-- Public events accordion -->
+          <!-- Public Events Manage -->
           <div class="panel" style="border-radius:14px">
             <div id="publicHead" class="panelHead accordionHead">
-              <strong>الأحداث العامة</strong>
-              <span class="sub">اضغط لفتح/إغلاق نموذج الإضافة</span>
+              <strong>إدارة الأحداث العامة</strong>
+              <span class="sub">إضافة/تعديل/حذف + CSV</span>
               <span class="chev" id="publicChev">▾</span>
             </div>
+            <div id="publicBox" class="panelBody" style="display:none;">
 
-            <div id="publicEventBox" class="panelBody" style="display:none;">
-              <div class="grid2">
+              <div class="note">
+                💡 أسرع طريقة: اضغط على اليوم في التقويم ثم اختر "عام" من النافذة.
+              </div>
+
+              <div class="rowBtns" style="justify-content:flex-start;margin-top:10px">
+                <button id="btnAdminAddPublicFromPanel" class="soft">+ إضافة حدث عام</button>
+                <button id="btnRefreshPublicList" class="ghost">تحديث القائمة</button>
+              </div>
+
+              <div class="scroll" style="margin-top:10px">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>التاريخ</th>
+                      <th>العنوان</th>
+                      <th>ملاحظة</th>
+                      <th>لون</th>
+                      <th>إجراءات</th>
+                    </tr>
+                  </thead>
+                  <tbody id="publicEventsTbody"></tbody>
+                </table>
+              </div>
+
+              <hr style="border:none;border-top:1px solid var(--line);margin:14px 0">
+
+              <strong style="font-size:13px">استيراد CSV (عامة)</strong>
+              <div class="note" style="margin-top:8px">
+                الأعمدة: <span class="mono">dateISO,title,note,color</span>
+              </div>
+              <div class="grid2" style="margin-top:10px">
                 <div>
-                  <label>التاريخ</label>
-                  <input id="pubDate" type="date">
+                  <label>ملف CSV</label>
+                  <input id="csvFile" type="file" accept=".csv,text/csv">
                 </div>
                 <div>
-                  <label>اللون</label>
-                  <input id="pubColor" type="color" value="#7c5cff">
+                  <label>السلوك</label>
+                  <select id="csvMode">
+                    <option value="append">إضافة (بدون حذف القديم)</option>
+                    <option value="replace_public">استبدال العامة (يحذف العامة ثم يضيف)</option>
+                  </select>
                 </div>
               </div>
-
-              <div style="margin-top:10px">
-                <label>العنوان</label>
-                <input id="pubTitle" type="text" placeholder="مثال: بداية الاختبارات">
+              <div class="rowBtns" style="margin-top:10px;justify-content:flex-start">
+                <button id="btnCsvPreview" class="soft">معاينة</button>
+                <button id="btnCsvImport" class="primary">استيراد</button>
               </div>
-
-              <div style="margin-top:10px">
-                <label>ملاحظات (اختياري)</label>
-                <textarea id="pubNote" placeholder="تفاصيل..."></textarea>
-              </div>
-
-              <div style="margin-top:10px" class="rowBtns">
-                <button id="btnAddPublic" class="primary">إضافة الحدث العام</button>
-              </div>
+              <div id="csvResult" class="note" style="display:none;"></div>
             </div>
           </div>
 
-          <!-- Weeks admin accordion -->
+          <!-- Weeks -->
           <div class="panel" style="border-radius:14px">
             <div id="weeksHead" class="panelHead accordionHead">
-              <strong>إدارة الأسابيع</strong>
-              <span class="sub">اضغط لفتح/إغلاق</span>
+              <strong>إدارة الأسابيع والإجازات</strong>
+              <span class="sub">إضافة/تعديل/حفظ</span>
               <span class="chev" id="weeksChev">▾</span>
             </div>
-
-            <div id="weeksAdminBox" class="panelBody" style="display:none;">
+            <div id="weeksBox" class="panelBody" style="display:none;">
               <div class="rowBtns" style="justify-content:flex-start">
                 <button id="btnAddWeek" class="soft">+ إضافة أسبوع</button>
                 <button id="btnAddVac" class="soft">+ إضافة إجازة</button>
@@ -310,53 +326,63 @@
           </div>
 
         </div><!-- grid2 -->
-
-        <!-- CSV Import (PRO) -->
-        <div class="panel" style="border-radius:14px;margin-top:12px">
-          <div id="csvHead" class="panelHead accordionHead">
-            <strong>استيراد CSV (Pro)</strong>
-            <span class="sub">استيراد دفعة واحدة للأحداث العامة/الخاصة</span>
-            <span class="chev" id="csvChev">▾</span>
-          </div>
-
-          <div id="csvBox" class="panelBody" style="display:none;">
-            <div class="note">
-              الأعمدة المطلوبة: <span class="mono">dateISO,title,note,color,scope</span>
-              <br>scope: <b>public</b> أو <b>private</b>. إذا لم يوجد scope: سيُحدَّد تلقائياً.
-            </div>
-
-            <div class="grid2" style="margin-top:10px">
-              <div>
-                <label>ملف CSV</label>
-                <input id="csvFile" type="file" accept=".csv,text/csv">
-              </div>
-              <div>
-                <label>سلوك الاستيراد</label>
-                <select id="csvMode">
-                  <option value="append">إضافة (بدون حذف القديم)</option>
-                  <option value="replace_public">استبدال الأحداث العامة فقط (يحذف العامة ثم يضيف)</option>
-                </select>
-                <div class="small" style="margin-top:6px">
-                  خيار الاستبدال يؤثر على <b>publicEvents</b> فقط.
-                </div>
-              </div>
-            </div>
-
-            <div class="rowBtns" style="margin-top:10px;justify-content:flex-start">
-              <button id="btnCsvPreview" class="soft">معاينة</button>
-              <button id="btnCsvImport" class="primary">استيراد</button>
-            </div>
-
-            <div id="csvResult" class="note" style="display:none;"></div>
-          </div>
-        </div>
-
       </div>
     </div>
   </div>
 
   <!-- Calendar -->
   <div class="weeks" id="weeksGrid"></div>
+</div>
+
+<!-- Modal: Add/Edit Event (click day) -->
+<div id="modalBack" class="modalBack" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modalHead">
+      <strong id="modalTitle">إضافة حدث</strong>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span id="modalHint" class="hint"></span>
+        <button id="btnCloseModal" class="danger" style="padding:8px 10px">إغلاق</button>
+      </div>
+    </div>
+    <div class="modalBody">
+      <div class="grid2">
+        <div>
+          <label>التاريخ</label>
+          <input id="mDate" type="date">
+        </div>
+        <div>
+          <label>اللون</label>
+          <input id="mColor" type="color" value="#35c6ff">
+        </div>
+      </div>
+
+      <div style="margin-top:10px">
+        <label>العنوان</label>
+        <input id="mTitle" type="text" placeholder="عنوان الحدث">
+      </div>
+
+      <div style="margin-top:10px">
+        <label>ملاحظات (اختياري)</label>
+        <textarea id="mNote" placeholder="تفاصيل..."></textarea>
+      </div>
+
+      <div id="scopeWrap" style="margin-top:10px;display:none">
+        <label>نوع الحدث (للمدير فقط)</label>
+        <select id="mScope">
+          <option value="private">خاص (لي فقط)</option>
+          <option value="public">عام (للجميع)</option>
+        </select>
+      </div>
+
+      <div class="rowBtns" style="margin-top:12px">
+        <button id="btnSaveModal" class="primary">حفظ</button>
+      </div>
+
+      <div class="note" style="margin-top:10px">
+        💡 المستخدم يضيف خاص فقط. المدير يمكنه عام/خاص.
+      </div>
+    </div>
+  </div>
 </div>
 
 <script type="module">
@@ -367,11 +393,11 @@
     sendPasswordResetEmail
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import {
-    getFirestore, collection, doc, getDoc, addDoc, deleteDoc,
+    getFirestore, collection, doc, getDoc, addDoc, deleteDoc, updateDoc,
     onSnapshot, query, orderBy, getDocs, writeBatch
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  /* ===== ضع إعدادات Firebase هنا ===== */
+  /* ===== Firebase Config ===== */
   const firebaseConfig = {
   apiKey: "AIzaSyAulObTByvUjUgz_8QD3el0DRKacmbdH9Y",
   authDomain: "calendar-w-2fcbe.firebaseapp.com",
@@ -382,7 +408,6 @@
   measurementId: "G-MSBWPX2C75"
   };
 
-  /* ===== Helpers ===== */
   const days = [
     {name:"الأحد", off:false},{name:"الإثنين", off:false},{name:"الثلاثاء", off:false},
     {name:"الأربعاء", off:false},{name:"الخميس", off:false},{name:"الجمعة", off:true},{name:"السبت", off:true},
@@ -410,11 +435,6 @@
     const x=String(c||"").trim();
     if(/^#[0-9a-fA-F]{6}$/.test(x)) return x;
     return "#7c5cff";
-  }
-  function cleanScope(s){
-    const x=String(s||"").trim().toLowerCase();
-    if(x==="public"||x==="private") return x;
-    return "";
   }
 
   /* ===== Umm al-Qura ===== */
@@ -446,13 +466,12 @@
     }));
   }
 
-  /* ===== UI Elements ===== */
+  /* ===== UI ===== */
   const rolePill = document.getElementById("rolePill");
   const demoNote = document.getElementById("demoNote");
   const weeksGrid = document.getElementById("weeksGrid");
 
   const loginPanel = document.getElementById("loginPanel");
-  const userPanel  = document.getElementById("userPanel");
   const adminPanel = document.getElementById("adminPanel");
 
   const btnShowLogin = document.getElementById("btnShowLogin");
@@ -463,24 +482,16 @@
   const btnLogin   = document.getElementById("btnLogin");
   const btnForgot  = document.getElementById("btnForgot");
 
-  const priDate = document.getElementById("priDate");
-  const priColor= document.getElementById("priColor");
-  const priTitle= document.getElementById("priTitle");
-  const priNote = document.getElementById("priNote");
-  const btnAddPrivate = document.getElementById("btnAddPrivate");
-
-  const pubDate = document.getElementById("pubDate");
-  const pubColor= document.getElementById("pubColor");
-  const pubTitle= document.getElementById("pubTitle");
-  const pubNote = document.getElementById("pubNote");
-  const btnAddPublic = document.getElementById("btnAddPublic");
-
   const publicHead = document.getElementById("publicHead");
-  const publicEventBox = document.getElementById("publicEventBox");
+  const publicBox  = document.getElementById("publicBox");
   const publicChev = document.getElementById("publicChev");
 
+  const publicEventsTbody = document.getElementById("publicEventsTbody");
+  const btnAdminAddPublicFromPanel = document.getElementById("btnAdminAddPublicFromPanel");
+  const btnRefreshPublicList = document.getElementById("btnRefreshPublicList");
+
   const weeksHead = document.getElementById("weeksHead");
-  const weeksAdminBox  = document.getElementById("weeksAdminBox");
+  const weeksBox  = document.getElementById("weeksBox");
   const weeksChev = document.getElementById("weeksChev");
 
   const btnAddWeek = document.getElementById("btnAddWeek");
@@ -488,20 +499,34 @@
   const btnSaveWeeks = document.getElementById("btnSaveWeeks");
   const weeksTbody = document.getElementById("weeksTbody");
 
-  // CSV PRO
-  const csvHead = document.getElementById("csvHead");
-  const csvBox = document.getElementById("csvBox");
-  const csvChev = document.getElementById("csvChev");
+  // CSV
   const csvFile = document.getElementById("csvFile");
   const csvMode = document.getElementById("csvMode");
   const btnCsvPreview = document.getElementById("btnCsvPreview");
-  const btnCsvImport = document.getElementById("btnCsvImport");
+  const btnCsvImport  = document.getElementById("btnCsvImport");
   const csvResult = document.getElementById("csvResult");
 
-  /* ===== App state ===== */
+  // Modal
+  const modalBack = document.getElementById("modalBack");
+  const btnCloseModal = document.getElementById("btnCloseModal");
+  const btnSaveModal  = document.getElementById("btnSaveModal");
+  const modalTitle = document.getElementById("modalTitle");
+  const modalHint  = document.getElementById("modalHint");
+
+  const mDate  = document.getElementById("mDate");
+  const mColor = document.getElementById("mColor");
+  const mTitle = document.getElementById("mTitle");
+  const mNote  = document.getElementById("mNote");
+  const scopeWrap = document.getElementById("scopeWrap");
+  const mScope = document.getElementById("mScope");
+
   const state = {
-    user:null, isAdmin:false, firebaseReady:false,
-    publicEvents:[], privateEvents:[], weeks:[]
+    user:null,
+    isAdmin:false,
+    firebaseReady:false,
+    publicEvents:[],
+    privateEvents:[],
+    weeks:[]
   };
 
   function setRolePill(){
@@ -516,8 +541,9 @@
     btnLogout.style.display    = state.user ? "inline-block" : "none";
 
     loginPanel.style.display = (!state.user) ? "block" : "none";
-    userPanel.style.display  = (state.user) ? "block" : "none";
     adminPanel.style.display = (state.isAdmin) ? "block" : "none";
+
+    scopeWrap.style.display = state.isAdmin ? "block" : "none";
   }
 
   function toggleBox(box, chev){
@@ -526,7 +552,7 @@
     if(chev) chev.textContent = open ? "▾" : "▴";
   }
 
-  /* ===== Firebase init (safe) ===== */
+  /* ===== Firebase init ===== */
   let app=null, auth=null, db=null;
   try{
     app = initializeApp(firebaseConfig);
@@ -539,7 +565,6 @@
     demoNote.innerHTML = `⚠️ <b>Demo Mode:</b> بيانات Firebase غير صحيحة أو ناقصة.`;
   }
 
-  /* ===== Admin check via Firestore: admins/{uid} ===== */
   async function checkIsAdmin(uid){
     try{
       const snap = await getDoc(doc(db, "admins", uid));
@@ -547,25 +572,8 @@
     }catch(e){ return false; }
   }
 
-  /* ===== Accordion clicks ===== */
-  publicHead?.addEventListener("click", ()=>{
-    if(!state.isAdmin) return alert("هذه الميزة للمدير فقط.");
-    toggleBox(publicEventBox, publicChev);
-  });
-  weeksHead?.addEventListener("click", ()=>{
-    if(!state.isAdmin) return alert("هذه الميزة للمدير فقط.");
-    toggleBox(weeksAdminBox, weeksChev);
-  });
-  csvHead?.addEventListener("click", ()=>{
-    if(!state.isAdmin) return alert("هذه الميزة للمدير فقط.");
-    toggleBox(csvBox, csvChev);
-  });
-
-  /* ===== Auth actions ===== */
-  btnShowLogin.onclick = ()=>{
-    loginPanel.style.display = "block";
-    window.scrollTo({top:0, behavior:"smooth"});
-  };
+  /* ===== Auth UI ===== */
+  btnShowLogin.onclick = ()=>{ loginPanel.style.display="block"; window.scrollTo({top:0,behavior:"smooth"}); };
   btnLogout.onclick = async ()=>{ if(auth) await signOut(auth); };
 
   btnLogin.onclick = async ()=>{
@@ -589,7 +597,10 @@
     }
   };
 
-  /* ===== Weeks editor (draft) ===== */
+  publicHead.addEventListener("click", ()=>{ if(!state.isAdmin) return alert("للمدير فقط."); toggleBox(publicBox, publicChev); });
+  weeksHead.addEventListener("click", ()=>{ if(!state.isAdmin) return alert("للمدير فقط."); toggleBox(weeksBox, weeksChev); });
+
+  /* ===== Weeks draft ===== */
   let weeksDraft = [];
   function normalizeWeeksDraft(){
     weeksDraft = weeksDraft.map(w=>({
@@ -616,7 +627,6 @@
     normalizeWeeksDraft();
   }
   function renderWeeksTable(){
-    if(!weeksTbody) return;
     weeksTbody.innerHTML = "";
     weeksDraft.forEach((w,idx)=>{
       const tr = document.createElement("tr");
@@ -698,21 +708,21 @@
     }
   });
 
-  btnAddWeek?.addEventListener("click", ()=>{
+  btnAddWeek.addEventListener("click", ()=>{
     if(!state.isAdmin) return alert("للمدير فقط.");
     const maxOrder = weeksDraft.reduce((m,w)=>Math.max(m, Number(w.order||0)),0);
     weeksDraft.push({id:null,order:maxOrder+1,type:"week",weekNumber:0,title:"أسبوع جديد",startDateISO:""});
     normalizeWeeksDraft(); renderWeeksTable();
   });
 
-  btnAddVac?.addEventListener("click", ()=>{
+  btnAddVac.addEventListener("click", ()=>{
     if(!state.isAdmin) return alert("للمدير فقط.");
     const maxOrder = weeksDraft.reduce((m,w)=>Math.max(m, Number(w.order||0)),0);
     weeksDraft.push({id:null,order:maxOrder+1,type:"vac",weekNumber:0,title:"إجازة (أسبوع)",startDateISO:""});
     normalizeWeeksDraft(); renderWeeksTable();
   });
 
-  btnSaveWeeks?.addEventListener("click", async ()=>{
+  btnSaveWeeks.addEventListener("click", async ()=>{
     if(!state.firebaseReady) return alert("Firebase غير جاهز.");
     if(!state.isAdmin) return alert("هذه العملية للمدير فقط.");
 
@@ -726,6 +736,7 @@
       const snap = await getDocs(collection(db,"publicWeeks"));
       const batch = writeBatch(db);
       snap.docs.forEach(d=> batch.delete(d.ref));
+
       weeksDraft.sort((a,b)=>a.order-b.order).forEach(w=>{
         const ref = doc(collection(db,"publicWeeks"));
         batch.set(ref, {
@@ -736,6 +747,7 @@
           startDateISO:(w.startDateISO||"").trim()
         });
       });
+
       await batch.commit();
       alert("تم حفظ الأسابيع.");
     }catch(err){
@@ -743,47 +755,7 @@
     }
   });
 
-  /* ===== Events add ===== */
-  btnAddPublic?.addEventListener("click", async ()=>{
-    if(!state.firebaseReady) return alert("Firebase غير جاهز.");
-    if(!state.isAdmin) return alert("للمدير فقط.");
-
-    const dateISO = pubDate.value;
-    const title = pubTitle.value.trim();
-    const note = pubNote.value.trim();
-    const color = pubColor.value || "#7c5cff";
-    if(!dateISO) return alert("اختر التاريخ.");
-    if(!title) return alert("اكتب العنوان.");
-
-    try{
-      await addDoc(collection(db,"publicEvents"), {dateISO,title,note,color,createdAt:Date.now()});
-      pubTitle.value=""; pubNote.value="";
-      alert("تمت إضافة حدث عام.");
-    }catch(err){
-      alert(err?.message || "فشل إضافة الحدث العام.");
-    }
-  });
-
-  btnAddPrivate?.addEventListener("click", async ()=>{
-    if(!state.firebaseReady) return alert("Firebase غير جاهز.");
-    if(!state.user) return alert("سجل الدخول أولاً.");
-
-    const dateISO = priDate.value;
-    const title = priTitle.value.trim();
-    const note = priNote.value.trim();
-    const color = priColor.value || "#35c6ff";
-    if(!dateISO) return alert("اختر التاريخ.");
-    if(!title) return alert("اكتب العنوان.");
-
-    try{
-      await addDoc(collection(db,`users/${state.user.uid}/privateEvents`), {dateISO,title,note,color,createdAt:Date.now()});
-      priTitle.value=""; priNote.value="";
-      alert("تمت إضافة حدث خاص.");
-    }catch(err){
-      alert(err?.message || "فشل إضافة الحدث الخاص.");
-    }
-  });
-
+  /* ===== Events delete ===== */
   async function deleteEvent(ev){
     try{
       if(!state.firebaseReady) return;
@@ -799,9 +771,66 @@
     }
   }
 
-  /* ===== CSV (PRO) ===== */
+  /* ===== Admin: render public events table ===== */
+  function renderPublicEventsTable(){
+    if(!publicEventsTbody) return;
+    publicEventsTbody.innerHTML = "";
+
+    const list = state.publicEvents.slice().sort((a,b)=> String(a.dateISO).localeCompare(String(b.dateISO)));
+
+    if(!list.length){
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td colspan="5" style="color:var(--muted)">لا يوجد أحداث عامة.</td>`;
+      publicEventsTbody.appendChild(tr);
+      return;
+    }
+
+    list.forEach(ev=>{
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td class="mono">${escapeHtml(ev.dateISO||"")}</td>
+        <td>${escapeHtml(ev.title||"")}</td>
+        <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis">${escapeHtml(ev.note||"")}</td>
+        <td><span style="display:inline-block;width:18px;height:18px;border-radius:6px;background:${escapeHtml(ev.color||"#7c5cff")};border:1px solid rgba(255,255,255,.18)"></span></td>
+        <td>
+          <button class="soft" data-act="editPublic" data-id="${ev.id}">تعديل</button>
+          <button class="danger" data-act="delPublic" data-id="${ev.id}">حذف</button>
+        </td>
+      `;
+      publicEventsTbody.appendChild(tr);
+    });
+  }
+
+  document.addEventListener("click", async (e)=>{
+    const editBtn = e.target.closest('button[data-act="editPublic"]');
+    const delBtn  = e.target.closest('button[data-act="delPublic"]');
+
+    if(editBtn){
+      const id = editBtn.dataset.id;
+      const ev = state.publicEvents.find(x=>x.id===id);
+      if(!ev) return;
+      openModal(ev.dateISO, { mode:"edit", scope:"public", id:ev.id, preset:ev });
+      return;
+    }
+
+    if(delBtn){
+      const id = delBtn.dataset.id;
+      const ev = state.publicEvents.find(x=>x.id===id);
+      if(!ev) return;
+      if(!confirm("حذف الحدث العام؟")) return;
+      await deleteEvent({scope:"public", id:ev.id});
+      return;
+    }
+  });
+
+  btnRefreshPublicList.addEventListener("click", ()=> renderPublicEventsTable());
+  btnAdminAddPublicFromPanel.addEventListener("click", ()=>{
+    const today = toISODate(new Date());
+    openModal(today, { mode:"add", scope:"public" });
+  });
+
+  /* ===== CSV (Public) ===== */
   function parseCSV(text){
-    // CSV parser بسيط يدعم علامات اقتباس
     const rows=[];
     let i=0, field="", row=[], inQ=false;
     const pushField=()=>{ row.push(field); field=""; };
@@ -817,143 +846,162 @@
         if(c === '"') inQ=true;
         else if(c === ','){ pushField(); }
         else if(c === '\n'){ pushField(); pushRow(); }
-        else if(c === '\r'){ /* ignore */ }
+        else if(c === '\r'){ }
         else field+=c;
       }
       i++;
     }
     pushField(); pushRow();
-    // حذف الصفوف الفارغة
     return rows.filter(r=> r.some(x=>String(x||"").trim()!==""));
   }
-
   function rowsToObjects(rows){
     if(!rows.length) return [];
     const headers = rows[0].map(h=>String(h||"").trim());
-    const data = rows.slice(1);
-    return data.map(r=>{
+    return rows.slice(1).map(r=>{
       const obj={};
       headers.forEach((h,idx)=> obj[h]= (r[idx] ?? "").toString().trim());
       return obj;
     });
   }
-
-  function summarizeImport(items, problems){
-    const pub = items.filter(x=>x.scope==="public").length;
-    const pri = items.filter(x=>x.scope==="private").length;
-    let html = `<b>جاهز للاستيراد:</b> <span class="okText">${items.length}</span> (عام: ${pub} | خاص: ${pri})`;
-    if(problems.length){
-      html += `<br><b>مشاكل:</b> <span class="badText">${problems.length}</span>`;
-      html += `<div class="small" style="margin-top:6px">أول 10 مشاكل:<br>${problems.slice(0,10).map(p=>escapeHtml(p)).join("<br>")}</div>`;
-    }
-    return html;
-  }
-
-  function normalizeImportedObjects(objs){
+  function normalizeImportedPublic(objs){
     const items=[], problems=[];
     objs.forEach((o,idx)=>{
       const dateISO = String(o.dateISO||"").trim();
       const title = String(o.title||"").trim();
       const note  = String(o.note||"").trim();
       const color = normColor(o.color);
-      let scope = cleanScope(o.scope);
-
-      if(!scope){
-        // default scope حسب الدور
-        scope = state.isAdmin ? "public" : "private";
-      }
-
       if(!isValidISODate(dateISO)) problems.push(`السطر ${idx+2}: dateISO غير صحيح (${dateISO})`);
       if(!title) problems.push(`السطر ${idx+2}: title فارغ`);
-      if(scope==="public" && !state.isAdmin) problems.push(`السطر ${idx+2}: scope=public يحتاج مدير`);
-
-      if(isValidISODate(dateISO) && title && (scope==="private" || state.isAdmin)){
-        items.push({
-          dateISO,
-          title,
-          note,
-          color,
-          scope
-        });
+      if(isValidISODate(dateISO) && title){
+        items.push({dateISO,title,note,color});
       }
     });
     return {items, problems};
   }
-
-  async function batchWriteDocs(makeRefAndData){
-    // تقسيم إلى دفعات <= 450 لتجنب حدود 500
+  async function batchWrite(ops){
     const CHUNK = 450;
-    for(let i=0;i<makeRefAndData.length;i+=CHUNK){
-      const slice = makeRefAndData.slice(i,i+CHUNK);
+    for(let i=0;i<ops.length;i+=CHUNK){
       const batch = writeBatch(db);
-      slice.forEach(({ref,data,op})=>{
-        if(op==="set") batch.set(ref,data);
-        else if(op==="del") batch.delete(ref);
+      ops.slice(i,i+CHUNK).forEach(x=>{
+        if(x.op==="del") batch.delete(x.ref);
+        else batch.set(x.ref, x.data);
       });
       await batch.commit();
     }
   }
-
-  btnCsvPreview?.addEventListener("click", async ()=>{
+  btnCsvPreview.addEventListener("click", async ()=>{
     if(!csvFile.files?.length) return alert("اختر ملف CSV.");
-    const f = csvFile.files[0];
-    const text = await f.text();
+    const text = await csvFile.files[0].text();
     const rows = parseCSV(text);
     const objs = rowsToObjects(rows);
-    const {items, problems} = normalizeImportedObjects(objs);
-    csvResult.style.display = "block";
-    csvResult.innerHTML = summarizeImport(items, problems);
+    const {items, problems} = normalizeImportedPublic(objs);
+    csvResult.style.display="block";
+    csvResult.innerHTML = `<b>جاهز:</b> ${items.length} — <b>مشاكل:</b> ${problems.length}`
+      + (problems.length ? `<div style="margin-top:8px;color:var(--warn)">${problems.slice(0,10).map(escapeHtml).join("<br>")}</div>` : "");
   });
-
-  btnCsvImport?.addEventListener("click", async ()=>{
+  btnCsvImport.addEventListener("click", async ()=>{
     if(!state.firebaseReady) return alert("Firebase غير جاهز.");
-    if(!state.isAdmin) return alert("الاستيراد من لوحة المدير فقط.");
+    if(!state.isAdmin) return alert("للمدير فقط.");
     if(!csvFile.files?.length) return alert("اختر ملف CSV.");
 
-    const f = csvFile.files[0];
-    const text = await f.text();
+    const text = await csvFile.files[0].text();
     const rows = parseCSV(text);
     const objs = rowsToObjects(rows);
-    const {items, problems} = normalizeImportedObjects(objs);
+    const {items, problems} = normalizeImportedPublic(objs);
 
-    csvResult.style.display = "block";
-    csvResult.innerHTML = summarizeImport(items, problems);
+    csvResult.style.display="block";
+    csvResult.innerHTML = `<b>جاهز:</b> ${items.length} — <b>مشاكل:</b> ${problems.length}`;
 
-    if(problems.length) return alert("يوجد أخطاء في CSV. أصلحها ثم أعد الاستيراد.");
-    if(!items.length) return alert("لا يوجد عناصر صالحة للاستيراد.");
+    if(problems.length) return alert("أصلح مشاكل CSV أولاً.");
+    if(!items.length) return alert("لا يوجد عناصر صالحة.");
 
     const mode = csvMode.value;
-
-    // تجهيز عمليات الكتابة
     const ops = [];
 
     try{
-      // replace_public: حذف كل publicEvents أولاً
-      if(mode === "replace_public"){
+      if(mode==="replace_public"){
         const snap = await getDocs(collection(db,"publicEvents"));
-        snap.docs.forEach(d=>{
-          ops.push({op:"del", ref: d.ref});
-        });
+        snap.docs.forEach(d=> ops.push({op:"del", ref:d.ref}));
       }
-
       items.forEach(it=>{
-        if(it.scope==="public"){
-          const ref = doc(collection(db,"publicEvents"));
-          ops.push({op:"set", ref, data:{...it, createdAt:Date.now()}});
-        }else{
-          // private: نخزنها تحت المستخدم الحالي (المدير أيضاً له privateEvents)
-          const uid = state.user?.uid;
-          if(!uid) return;
-          const ref = doc(collection(db, `users/${uid}/privateEvents`));
-          ops.push({op:"set", ref, data:{...it, createdAt:Date.now()}});
-        }
+        const ref = doc(collection(db,"publicEvents"));
+        ops.push({op:"set", ref, data:{dateISO:it.dateISO,title:it.title,note:it.note,color:it.color,createdAt:Date.now()}});
       });
 
-      await batchWriteDocs(ops);
-      alert(`تم الاستيراد بنجاح: ${items.length} حدث.`);
+      await batchWrite(ops);
+      alert(`تم الاستيراد: ${items.length} حدث عام.`);
       csvFile.value="";
     }catch(err){
       alert(err?.message || "فشل الاستيراد.");
+    }
+  });
+
+  /* ===== Modal Add/Edit ===== */
+  const modalState = { mode:"add", id:null, scope:"private" };
+
+  function openModal(dateISO, opts={}){
+    modalState.mode  = opts.mode || "add";
+    modalState.id    = opts.id || null;
+    modalState.scope = opts.scope || (state.isAdmin ? "public" : "private");
+
+    modalTitle.textContent = (modalState.mode==="edit") ? "تعديل حدث" : "إضافة حدث";
+    modalHint.textContent  = (modalState.scope==="public") ? "عام" : "خاص";
+
+    mDate.value  = dateISO || "";
+    mTitle.value = opts.preset?.title || "";
+    mNote.value  = opts.preset?.note  || "";
+    mColor.value = opts.preset?.color || (modalState.scope==="public" ? "#7c5cff" : "#35c6ff");
+
+    if(state.isAdmin){
+      scopeWrap.style.display = "block";
+      mScope.value = modalState.scope;
+    }else{
+      scopeWrap.style.display = "none";
+      mScope.value = "private";
+    }
+
+    modalBack.style.display = "flex";
+    setTimeout(()=>mTitle.focus(), 50);
+  }
+  function closeModal(){ modalBack.style.display = "none"; }
+
+  btnCloseModal.addEventListener("click", closeModal);
+  modalBack.addEventListener("click", (e)=>{ if(e.target === modalBack) closeModal(); });
+  document.addEventListener("keydown", (e)=>{ if(e.key==="Escape" && modalBack.style.display==="flex") closeModal(); });
+
+  btnSaveModal.addEventListener("click", async ()=>{
+    if(!state.firebaseReady) return alert("Firebase غير جاهز.");
+    if(!state.user) return alert("سجل الدخول أولاً.");
+
+    const dateISO = mDate.value;
+    const title = mTitle.value.trim();
+    const note  = mNote.value.trim();
+    const color = mColor.value || "#35c6ff";
+    if(!dateISO) return alert("اختر التاريخ.");
+    if(!title) return alert("اكتب العنوان.");
+    if(!isValidISODate(dateISO)) return alert("صيغة التاريخ غير صحيحة.");
+
+    const finalScope = (state.isAdmin ? mScope.value : "private");
+
+    try{
+      if(finalScope==="public"){
+        if(!state.isAdmin) return alert("هذا الخيار للمدير فقط.");
+        if(modalState.mode==="edit" && modalState.id){
+          await updateDoc(doc(db,"publicEvents", modalState.id), {dateISO,title,note,color});
+        }else{
+          await addDoc(collection(db,"publicEvents"), {dateISO,title,note,color,createdAt:Date.now()});
+        }
+      }else{
+        // private
+        if(modalState.mode==="edit" && modalState.id && modalState.scope==="private"){
+          await updateDoc(doc(db,`users/${state.user.uid}/privateEvents`, modalState.id), {dateISO,title,note,color});
+        }else{
+          await addDoc(collection(db,`users/${state.user.uid}/privateEvents`), {dateISO,title,note,color,createdAt:Date.now()});
+        }
+      }
+      closeModal();
+    }catch(err){
+      alert(err?.message || "فشل الحفظ.");
     }
   });
 
@@ -1032,24 +1080,35 @@
             </div>
             ${((ev.scope==="public" && state.isAdmin) || (ev.scope==="private" && state.user)) ? `<div class="x" title="حذف">×</div>` : ""}
           `;
+
           item.addEventListener("click", (e)=> e.stopPropagation());
           const x=item.querySelector(".x");
           if(x){
             x.addEventListener("click",(e)=>{
               e.stopPropagation();
-              if(confirm("حذف الحدث؟")) deleteEvent(ev);
+              if(!confirm("حذف الحدث؟")) return;
+              deleteEvent(ev);
             });
           }
+
+          // (اختياري) تحرير سريع للأحداث الخاصة بالنقر على الحدث
+          item.addEventListener("dblclick", (e)=>{
+            e.stopPropagation();
+            if(!state.user) return;
+            if(ev.scope==="public" && !state.isAdmin) return;
+            openModal(ev.dateISO, { mode:"edit", scope:ev.scope, id:ev.id, preset:ev });
+          });
+
           wrap.appendChild(item);
         });
 
         td.appendChild(wrap);
 
+        // ✅ إضافة حدث عند الضغط على اليوم
         td.style.cursor = state.user ? "pointer" : "default";
         td.addEventListener("click", ()=>{
-          if(!state.user) return;
-          priDate.value = iso;
-          priTitle.focus();
+          if(!state.user) return alert("سجّل دخولك لإضافة حدث.");
+          openModal(iso, { mode:"add", scope: (state.isAdmin ? "public" : "private") });
         });
 
         table.appendChild(td);
@@ -1057,6 +1116,9 @@
 
       weeksGrid.appendChild(card);
     });
+
+    // تحديث جدول المدير
+    if(state.isAdmin) renderPublicEventsTable();
   }
 
   /* ===== Start (local) ===== */
@@ -1091,12 +1153,13 @@
       });
     }
 
-    let unsubPublic = listenPublicEvents();
-    let unsubWeeks  = listenWeeks();
+    const unsubPublic = listenPublicEvents();
+    const unsubWeeks  = listenWeeks();
     let unsubPrivate = null;
 
     onAuthStateChanged(auth, async (user)=>{
       state.user = user;
+
       if(unsubPrivate){ unsubPrivate(); unsubPrivate=null; }
 
       if(user){
@@ -1104,12 +1167,13 @@
         unsubPrivate = listenPrivateEvents(user.uid);
       }else{
         state.isAdmin = false;
+        state.privateEvents = [];
       }
 
-      // اغلاق الأكوردين لغير الأدمن
+      // إغلاق أقسام المدير لغير الأدمن
       if(!state.isAdmin){
-        publicEventBox.style.display = "none"; weeksAdminBox.style.display = "none"; csvBox.style.display="none";
-        publicChev.textContent = "▾"; weeksChev.textContent = "▾"; csvChev.textContent="▾";
+        publicBox.style.display = "none"; weeksBox.style.display = "none";
+        publicChev.textContent = "▾"; weeksChev.textContent = "▾";
       }
 
       setRolePill();
